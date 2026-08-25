@@ -4,6 +4,11 @@ import './index.css';
 import App from './App.tsx';
 import { ErrorBoundary } from './ErrorBoundary.tsx';
 
+const savedTheme = localStorage.getItem('lexuni-theme') || 'light';
+if (savedTheme !== 'light') {
+  document.documentElement.setAttribute('data-theme', savedTheme);
+}
+
 createRoot(document.getElementById('root')!).render(
   <StrictMode>
     <ErrorBoundary>

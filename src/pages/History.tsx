@@ -23,25 +23,25 @@ export default function History() {
     <div className="p-4 sm:p-6 pb-24 max-w-2xl mx-auto">
       <header className="mb-8 flex items-center justify-between">
         <div>
-          <h1 className="text-3xl font-bold text-slate-900">History</h1>
-          <p className="text-slate-500 font-medium mt-1">{sessions.length} sessions completed</p>
+          <h1 className="text-3xl font-bold text-tx">History</h1>
+          <p className="text-tx-secondary font-medium mt-1">{sessions.length} sessions completed</p>
         </div>
         
         {sessions.length > 0 && (
           clearConfirm ? (
-            <div className="flex items-center bg-rose-50 rounded-xl p-1">
-              <span className="text-xs text-rose-700 font-bold px-2">Clear All?</span>
-              <button onClick={handleClearAll} className="p-2 text-rose-600 hover:bg-rose-100 rounded-lg">
+            <div className="flex items-center bg-danger-bg rounded-xl p-1">
+              <span className="text-xs text-danger-tx font-bold px-2">Clear All?</span>
+              <button onClick={handleClearAll} className="p-2 text-danger-tx hover:bg-danger-bg rounded-lg">
                 <Check size={18} />
               </button>
-              <button onClick={() => setClearConfirm(false)} className="p-2 text-slate-500 hover:bg-slate-200 rounded-lg">
+              <button onClick={() => setClearConfirm(false)} className="p-2 text-tx-secondary hover:bg-surface-hover rounded-lg">
                 <X size={18} />
               </button>
             </div>
           ) : (
             <button 
               onClick={() => setClearConfirm(true)}
-              className="p-3 text-slate-400 hover:text-rose-600 hover:bg-rose-50 rounded-xl transition-colors border border-transparent hover:border-rose-100"
+              className="p-3 text-tx-muted hover:text-danger-tx hover:bg-danger-bg rounded-xl transition-colors border border-transparent hover:border-danger-border"
               title="Clear All History"
             >
               <Trash2 size={20} />
@@ -51,8 +51,8 @@ export default function History() {
       </header>
 
       {sortedSessions.length === 0 ? (
-        <div className="text-center py-12 text-slate-500 font-medium">
-          <div className="w-20 h-20 bg-slate-100 text-slate-400 rounded-3xl flex items-center justify-center mx-auto mb-6">
+        <div className="text-center py-12 text-tx-secondary font-medium">
+          <div className="w-20 h-20 bg-surface-hover text-tx-muted rounded-3xl flex items-center justify-center mx-auto mb-6">
             <Clock size={40} strokeWidth={2} />
           </div>
           <p>No practice history yet.</p>
@@ -76,24 +76,24 @@ export default function History() {
               <div 
                 key={session.id}
                 onClick={() => navigate(`/session/${session.id}`)}
-                className="bg-white p-4 rounded-2xl shadow-sm border border-slate-200 flex items-center justify-between cursor-pointer active:scale-[0.99] transition-transform hover:border-slate-300"
+                className="bg-surface p-4 rounded-2xl shadow-sm border border-border flex items-center justify-between cursor-pointer active:scale-[0.99] transition-transform hover:border-border-strong"
               >
                 <div>
-                  <div className="text-xs font-bold text-slate-400 mb-1">{dateStr}</div>
-                  <h3 className="font-bold text-lg text-slate-900 mb-1">
+                  <div className="text-xs font-bold text-tx-muted mb-1">{dateStr}</div>
+                  <h3 className="font-bold text-lg text-tx mb-1">
                     {session.sourceType === 'all' ? 'All Words' : session.groupName || 'Deleted Group'}
                   </h3>
-                  <div className="text-sm font-medium text-slate-500 flex space-x-3">
+                  <div className="text-sm font-medium text-tx-secondary flex space-x-3">
                     <span>{session.totalAnswered} answered</span>
                     <span>&middot;</span>
-                    <span className={accuracy >= 80 ? 'text-emerald-600' : accuracy >= 50 ? 'text-amber-600' : 'text-rose-600'}>
+                    <span className={accuracy >= 80 ? 'text-success-tx' : accuracy >= 50 ? 'text-warning-tx' : 'text-danger-tx'}>
                       {accuracy}% accuracy
                     </span>
                     <span>&middot;</span>
                     <span>{durationStr}</span>
                   </div>
                 </div>
-                <ChevronRight className="text-slate-300" />
+                <ChevronRight className="text-tx-muted" />
               </div>
             );
           })}

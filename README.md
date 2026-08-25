@@ -4,10 +4,12 @@ Lexuni is a fast, local-first English-Turkish vocabulary practice web app. It's 
 
 ## Features
 
-- **Import Groups**: Organize words by their import batch for contextual learning.
-- **Study Sessions**: Track your practice history, duration, and specific mistakes.
+- **Import Groups**: Organize words by their import batch for contextual learning. Merge multiple groups together easily.
+- **Study Sessions**: Track your practice history, duration, and specific mistakes. Sessions persist across browser reloads.
 - **Global Vocabulary Pool**: Practice all words together or focus on specific groups.
-- **Fast Practice Mode**: 4-option multiple-choice questions with immediate visual feedback.
+- **Bidirectional Practice**: Questions automatically mix English → Turkish and Turkish → English.
+- **Smart Practice Flow**: Correct answers are fast and fluid. Wrong answers pause for visual correction and reinforcement.
+- **5 App Themes**: Choose from Light, Dark, Ocean, Forest, and Sunset themes in the Settings page.
 - **Smart Import**: Easily paste vocabulary lists in a simple text format.
 - **AI Helper**: Built-in prompts for converting screenshots or text into importable vocabulary.
 - **Local-First Privacy**: No backend, no accounts. All data stays in your browser via IndexedDB.

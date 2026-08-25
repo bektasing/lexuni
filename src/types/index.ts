@@ -34,6 +34,7 @@ export type StudySession = {
   currentWordId?: string;
   currentDirection?: "en-tr" | "tr-en";
   currentOptions?: string[];
+  selectedOptionId?: string;
   
   lastWordId?: string;
 };

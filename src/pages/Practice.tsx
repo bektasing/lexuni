@@ -28,9 +28,8 @@ export default function Practice() {
   const [selectedSource, setSelectedSource] = useState<'all' | 'group'>('all');
   const [selectedGroupId, setSelectedGroupId] = useState<string | null>(null);
 
-  // Transient state for UI feedback during the delay after an answer
-  const [isWaiting, setIsWaiting] = useState(false);
-  const [selectedOptionId, setSelectedOptionId] = useState<string | null>(null);
+  const isWaiting = !!(activeSession && activeSession.selectedOptionId);
+  const selectedOptionId = activeSession?.selectedOptionId || null;
 
   // Timer interval
   useEffect(() => {
@@ -62,7 +61,6 @@ export default function Practice() {
     const currentWordId = queue.shift()!;
     const currentWord = words.find(w => w.id === currentWordId);
     if (!currentWord) {
-      // fallback if word was deleted
       await db.sessions.update(session.id, { questionQueue: queue });
       return; 
     }
@@ -72,7 +70,6 @@ export default function Practice() {
     const distractors = words.filter(w => w.id !== currentWordId);
     const shuffledDistractors = shuffleArray(distractors);
     
-    // Ensure unique display values for options
     const optionsSet = new Set<string>();
     optionsSet.add(direction === 'en-tr' ? currentWord.turkish : currentWord.english);
     
@@ -92,6 +89,7 @@ export default function Practice() {
       currentWordId,
       currentDirection: direction,
       currentOptions,
+      selectedOptionId: undefined, // Clear selected state for new question
       questionQueue: queue
     });
   }, [words]);
@@ -137,18 +135,13 @@ export default function Practice() {
   // Auto-start if params are provided and no active session exists
   useEffect(() => {
     if (sourceParam === 'group' && groupIdParam && words && !activeSession && !isWaiting) {
-      // Small timeout to let state settle
       setTimeout(() => startSession('group', groupIdParam), 0);
     }
-    // eslint-disable-next-line react-hooks/exhaustive-deps
   }, [sourceParam, groupIdParam, !!words]);
 
   const handleAnswer = async (wordId: string) => {
     if (isWaiting || !activeSession || !activeSession.currentWordId) return;
     
-    setSelectedOptionId(wordId);
-    setIsWaiting(true);
-
     const isCorrect = wordId === activeSession.currentWordId;
     const currentWord = words?.find(w => w.id === activeSession.currentWordId);
     
@@ -170,7 +163,6 @@ export default function Practice() {
 
     const newQueue = [...(activeSession.questionQueue || [])];
     if (!isCorrect) {
-      // Reinforcement: insert word a few questions later
       const insertAt = Math.min(newQueue.length, 5 + Math.floor(Math.random() * 4));
       newQueue.splice(insertAt, 0, activeSession.currentWordId);
     }
@@ -180,18 +172,31 @@ export default function Practice() {
       correctCount: activeSession.correctCount + (isCorrect ? 1 : 0),
       wrongCount: activeSession.wrongCount + (!isCorrect ? 1 : 0),
       lastWordId: activeSession.currentWordId,
-      questionQueue: newQueue
+      questionQueue: newQueue,
+      selectedOptionId: wordId
     });
 
-    setTimeout(async () => {
-      await db.sessions.update(activeSession.id, {
-        currentWordId: undefined,
-        currentDirection: undefined,
-        currentOptions: undefined
-      });
-      setIsWaiting(false);
-      setSelectedOptionId(null);
-    }, isCorrect ? 600 : 1200);
+    if (isCorrect) {
+      setTimeout(async () => {
+        if (!activeSession) return;
+        await db.sessions.update(activeSession.id, {
+          currentWordId: undefined,
+          currentDirection: undefined,
+          currentOptions: undefined,
+          selectedOptionId: undefined
+        });
+      }, 400); // Fast auto-advance for correct
+    }
+  };
+
+  const handleContinueAfterWrong = async () => {
+    if (!activeSession) return;
+    await db.sessions.update(activeSession.id, {
+      currentWordId: undefined,
+      currentDirection: undefined,
+      currentOptions: undefined,
+      selectedOptionId: undefined
+    });
   };
 
   const finishSession = async () => {
@@ -215,7 +220,7 @@ export default function Practice() {
       // Loading next question
       return (
         <div className="flex items-center justify-center min-h-[80vh]">
-          <div className="animate-pulse text-slate-400 font-bold">Loading question...</div>
+          <div className="animate-pulse text-tx-muted font-bold">Loading question...</div>
         </div>
       );
     }
@@ -232,17 +237,17 @@ export default function Practice() {
     const meaningLabel = isEnTr ? "Turkish meaning" : "English meaning";
 
     return (
-      <div className="flex flex-col h-screen sm:h-[calc(100vh-2rem)] sm:pt-8 bg-slate-50">
-        <header className="px-4 py-3 flex items-center justify-between bg-white border-b border-slate-200 shrink-0 sm:rounded-t-3xl sm:mx-4 sm:border sm:shadow-sm">
+      <div className="flex flex-col h-screen sm:h-[calc(100vh-2rem)] sm:pt-8 bg-bg">
+        <header className="px-4 py-3 flex items-center justify-between bg-surface border-b border-border shrink-0 sm:rounded-t-3xl sm:mx-4 sm:border sm:shadow-sm">
           <div className="flex space-x-3 sm:space-x-4 text-xs sm:text-sm font-bold">
-            <div className="text-slate-500">{activeSession.totalAnswered} answered</div>
-            <div className="text-emerald-600">{activeSession.correctCount} ✓</div>
-            <div className="text-rose-600">{activeSession.wrongCount} ✗</div>
-            <div className="text-blue-600">{accuracy}%</div>
+            <div className="text-tx-secondary">{activeSession.totalAnswered} answered</div>
+            <div className="text-success-tx">{activeSession.correctCount} ✓</div>
+            <div className="text-danger-tx">{activeSession.wrongCount} ✗</div>
+            <div className="text-primary">{accuracy}%</div>
           </div>
           <button 
             onClick={finishSession}
-            className="px-4 py-2 bg-slate-100 text-slate-700 hover:bg-slate-200 rounded-xl font-bold text-sm transition-colors"
+            className="px-4 py-2 bg-surface-hover text-tx-secondary hover:bg-surface-hover rounded-xl font-bold text-sm transition-colors"
           >
             Finish
           </button>
@@ -250,8 +255,8 @@ export default function Practice() {
 
         <main className="flex-1 flex flex-col p-6 sm:px-4">
           <div className="flex-1 flex flex-col items-center justify-center mb-8">
-            <div className="text-sm font-bold uppercase tracking-widest text-slate-400 mb-4">Select the {meaningLabel}</div>
-            <h1 className="text-4xl sm:text-5xl font-black text-slate-900 text-center break-words max-w-full">
+            <div className="text-sm font-bold uppercase tracking-widest text-tx-muted mb-4">Select the {meaningLabel}</div>
+            <h1 className="text-4xl sm:text-5xl font-black text-tx text-center break-words max-w-full">
               {questionText}
             </h1>
           </div>
@@ -265,15 +270,15 @@ export default function Practice() {
               const isCorrect = optId === activeSession.currentWordId;
               const optionText = isEnTr ? optWord.turkish : optWord.english;
               
-              let btnClass = "bg-white border-2 border-slate-200 text-slate-700 hover:border-slate-300 active:bg-slate-50";
+              let btnClass = "bg-surface border-2 border-border text-tx-secondary hover:border-border-strong active:bg-bg";
               
               if (isWaiting) {
                 if (isCorrect) {
-                  btnClass = "bg-emerald-500 border-emerald-500 text-white shadow-lg shadow-emerald-200";
+                  btnClass = "bg-emerald-500 border-emerald-500 text-white shadow-lg shadow-lg";
                 } else if (isSelected && !isCorrect) {
-                  btnClass = "bg-rose-500 border-rose-500 text-white shadow-lg shadow-rose-200";
+                  btnClass = "bg-rose-500 border-rose-500 text-white shadow-lg shadow-lg";
                 } else {
-                  btnClass = "bg-white border-2 border-slate-100 text-slate-300 opacity-50";
+                  btnClass = "bg-surface border-2 border-border text-tx-muted opacity-50";
                 }
               }
 
@@ -290,6 +295,15 @@ export default function Practice() {
                 </button>
               );
             })}
+
+            {isWaiting && selectedOptionId !== activeSession.currentWordId && (
+              <button
+                onClick={handleContinueAfterWrong}
+                className="mt-6 p-4 bg-tx text-bg rounded-2xl font-bold text-lg flex items-center justify-center space-x-2 active:scale-[0.98] transition-transform animate-in fade-in slide-in-from-bottom-4 shadow-lg"
+              >
+                <span>Tap to Continue</span>
+              </button>
+            )}
           </div>
         </main>
       </div>
@@ -302,14 +316,14 @@ export default function Practice() {
   if (!canPractice) {
     return (
       <div className="flex flex-col items-center justify-center min-h-[80vh] p-6 text-center">
-        <div className="w-20 h-20 bg-amber-100 text-amber-600 rounded-3xl flex items-center justify-center mb-6">
+        <div className="w-20 h-20 bg-amber-100 text-warning-tx rounded-3xl flex items-center justify-center mb-6">
           <XCircle size={40} strokeWidth={2} />
         </div>
         <h2 className="text-xl font-bold mb-2">Not enough words</h2>
-        <p className="text-slate-500 mb-8">You need at least 4 words to practice.</p>
+        <p className="text-tx-secondary mb-8">You need at least 4 words to practice.</p>
         <button
           onClick={() => navigate('/')}
-          className="bg-slate-900 text-white px-8 py-3 rounded-xl font-semibold"
+          className="bg-tx text-bg px-8 py-3 rounded-xl font-semibold"
         >
           Go Back
         </button>
@@ -320,17 +334,17 @@ export default function Practice() {
   return (
     <div className="p-4 sm:p-6 pb-24 max-w-xl mx-auto">
       <header className="mb-8">
-        <h1 className="text-3xl font-bold text-slate-900">Practice Setup</h1>
-        <p className="text-slate-500 font-medium mt-1">Select what you want to practice.</p>
+        <h1 className="text-3xl font-bold text-tx">Practice Setup</h1>
+        <p className="text-tx-secondary font-medium mt-1">Select what you want to practice.</p>
       </header>
 
       <div className="space-y-4">
         <div 
           onClick={() => { setSelectedSource('all'); setSelectedGroupId(null); }}
-          className={`p-5 rounded-2xl border-2 cursor-pointer transition-colors ${selectedSource === 'all' ? 'border-blue-600 bg-blue-50' : 'border-slate-200 bg-white hover:border-slate-300'}`}
+          className={`p-5 rounded-2xl border-2 cursor-pointer transition-colors ${selectedSource === 'all' ? 'border-primary bg-primary-soft' : 'border-border bg-surface hover:border-border-strong'}`}
         >
-          <h3 className="font-bold text-lg text-slate-900">All Words</h3>
-          <p className="text-slate-500 font-medium">{words.length} words</p>
+          <h3 className="font-bold text-lg text-tx">All Words</h3>
+          <p className="text-tx-secondary font-medium">{words.length} words</p>
         </div>
 
         {groups.sort((a,b) => b.createdAt.localeCompare(a.createdAt)).map(g => {
@@ -342,10 +356,10 @@ export default function Practice() {
             <div 
               key={g.id}
               onClick={() => { setSelectedSource('group'); setSelectedGroupId(g.id); }}
-              className={`p-5 rounded-2xl border-2 cursor-pointer transition-colors ${isSelected ? 'border-blue-600 bg-blue-50' : 'border-slate-200 bg-white hover:border-slate-300'}`}
+              className={`p-5 rounded-2xl border-2 cursor-pointer transition-colors ${isSelected ? 'border-primary bg-primary-soft' : 'border-border bg-surface hover:border-border-strong'}`}
             >
-              <h3 className="font-bold text-lg text-slate-900">{g.name}</h3>
-              <p className="text-slate-500 font-medium">{count} words</p>
+              <h3 className="font-bold text-lg text-tx">{g.name}</h3>
+              <p className="text-tx-secondary font-medium">{count} words</p>
             </div>
           );
         })}
@@ -353,7 +367,7 @@ export default function Practice() {
 
       <button
         onClick={() => startSession(selectedSource, selectedGroupId)}
-        className="w-full mt-8 bg-blue-600 text-white py-4 rounded-2xl font-bold text-lg flex items-center justify-center space-x-2 active:scale-[0.98] transition-transform shadow-lg shadow-blue-200"
+        className="w-full mt-8 bg-primary text-white py-4 rounded-2xl font-bold text-lg flex items-center justify-center space-x-2 active:scale-[0.98] transition-transform shadow-lg shadow-lg"
       >
         <Play size={20} fill="currentColor" />
         <span>Start Session</span>

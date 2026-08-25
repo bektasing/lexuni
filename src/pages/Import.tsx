@@ -134,11 +134,11 @@ Rules:
   return (
     <div className="p-4 sm:p-6 pb-24 max-w-2xl mx-auto">
       <header className="mb-8">
-        <h1 className="text-3xl font-bold text-slate-900">Import Words</h1>
-        <p className="text-slate-500 font-medium mt-1">Paste your vocabulary list below.</p>
+        <h1 className="text-3xl font-bold text-tx">Import Words</h1>
+        <p className="text-tx-secondary font-medium mt-1">Paste your vocabulary list below.</p>
       </header>
 
-      <div className="bg-gradient-to-r from-blue-600 to-indigo-600 rounded-3xl p-6 text-white mb-8 shadow-lg shadow-blue-200">
+      <div className="bg-gradient-to-r from-blue-600 to-indigo-600 rounded-3xl p-6 text-white mb-8 shadow-lg shadow-lg">
         <div className="flex items-center space-x-3 mb-3">
           <Sparkles className="text-blue-200" />
           <h2 className="text-xl font-bold">AI Import Helper</h2>
@@ -148,17 +148,17 @@ Rules:
         </p>
         <button
           onClick={copyPrompt}
-          className="flex items-center justify-center w-full space-x-2 bg-white/20 hover:bg-white/30 text-white py-3 rounded-xl font-semibold transition-colors active:scale-[0.98]"
+          className="flex items-center justify-center w-full space-x-2 bg-surface/20 hover:bg-surface/30 text-white py-3 rounded-xl font-semibold transition-colors active:scale-[0.98]"
         >
           {copied ? <CheckCircle2 size={18} /> : <Copy size={18} />}
           <span>{copied ? 'Copied!' : 'Copy AI Prompt'}</span>
         </button>
       </div>
 
-      <div className="bg-white p-4 rounded-3xl shadow-sm border border-slate-200 mb-6">
+      <div className="bg-surface p-4 rounded-3xl shadow-sm border border-border mb-6">
         <div className="flex items-start justify-between mb-2">
-          <label className="font-bold text-slate-700 ml-2">Vocabulary List</label>
-          <div className="text-xs text-slate-400 bg-slate-100 px-2 py-1 rounded font-mono">word = meaning</div>
+          <label className="font-bold text-tx-secondary ml-2">Vocabulary List</label>
+          <div className="text-xs text-tx-muted bg-surface-hover px-2 py-1 rounded font-mono">word = meaning</div>
         </div>
         <textarea
           value={input}
@@ -167,13 +167,13 @@ Rules:
             if (preview) setPreview(null);
           }}
           placeholder={"# Chapter 1\n\nreliable = güvenilir\ndeploy = yayına almak\nretrieve = geri almak"}
-          className="w-full h-48 p-4 bg-slate-50 rounded-2xl outline-none focus:ring-2 focus:ring-blue-500 resize-none font-mono text-sm"
+          className="w-full h-48 p-4 bg-bg rounded-2xl outline-none focus:ring-2 focus:ring-primary resize-none font-mono text-sm"
         ></textarea>
         
         <button
           onClick={handlePreview}
           disabled={!input.trim()}
-          className="w-full mt-4 flex items-center justify-center space-x-2 bg-slate-900 text-white py-4 rounded-2xl font-bold text-lg disabled:opacity-50 disabled:active:scale-100 active:scale-[0.98] transition-all"
+          className="w-full mt-4 flex items-center justify-center space-x-2 bg-tx text-bg py-4 rounded-2xl font-bold text-lg disabled:opacity-50 disabled:active:scale-100 active:scale-[0.98] transition-all"
         >
           <ImportIcon size={20} />
           <span>Preview Import</span>
@@ -181,20 +181,20 @@ Rules:
       </div>
 
       {preview && (
-        <div className="bg-white p-6 rounded-3xl shadow-sm border border-slate-200 animate-in fade-in slide-in-from-bottom-4">
+        <div className="bg-surface p-6 rounded-3xl shadow-sm border border-border animate-in fade-in slide-in-from-bottom-4">
           <h3 className="font-bold text-xl mb-1">Import Preview</h3>
-          <p className="text-slate-500 font-medium mb-4">Group: <span className="text-slate-900 font-bold">{groupName}</span></p>
+          <p className="text-tx-secondary font-medium mb-4">Group: <span className="text-tx font-bold">{groupName}</span></p>
           
           <div className="grid grid-cols-3 gap-3 mb-6">
-            <div className="bg-emerald-50 text-emerald-700 p-3 rounded-xl text-center">
+            <div className="bg-success-bg text-success-tx p-3 rounded-xl text-center">
               <div className="text-2xl font-black">{validCount}</div>
               <div className="text-xs font-bold uppercase mt-1">New</div>
             </div>
-            <div className="bg-amber-50 text-amber-700 p-3 rounded-xl text-center">
+            <div className="bg-warning-bg text-warning-tx p-3 rounded-xl text-center">
               <div className="text-2xl font-black">{duplicateCount}</div>
               <div className="text-xs font-bold uppercase mt-1">Duplicates</div>
             </div>
-            <div className="bg-rose-50 text-rose-700 p-3 rounded-xl text-center">
+            <div className="bg-danger-bg text-danger-tx p-3 rounded-xl text-center">
               <div className="text-2xl font-black">{invalidCount}</div>
               <div className="text-xs font-bold uppercase mt-1">Invalid</div>
             </div>
@@ -202,23 +202,23 @@ Rules:
 
           <div className="max-h-60 overflow-y-auto space-y-2 mb-6 pr-2">
             {preview.map((p, i) => (
-              <div key={i} className="flex items-center space-x-3 text-sm p-2 rounded-lg bg-slate-50">
+              <div key={i} className="flex items-center space-x-3 text-sm p-2 rounded-lg bg-bg">
                 {p.status === 'valid' && <CheckCircle2 className="text-emerald-500 shrink-0" size={16} />}
-                {p.status === 'duplicate' && <Info className="text-amber-500 shrink-0" size={16} />}
+                {p.status === 'duplicate' && <Info className="text-warning-tx shrink-0" size={16} />}
                 {p.status === 'invalid' && <AlertCircle className="text-rose-500 shrink-0" size={16} />}
                 
                 <span className="truncate flex-1">
                   {p.status === 'invalid' ? p.original : (
                     <>
                       <span className="font-bold">{p.english}</span>
-                      <span className="text-slate-400 mx-2">→</span>
+                      <span className="text-tx-muted mx-2">→</span>
                       <span>{p.turkish}</span>
                     </>
                   )}
                 </span>
                 
-                {p.status === 'duplicate' && <span className="text-xs text-amber-600 font-medium">Exists</span>}
-                {p.status === 'invalid' && <span className="text-xs text-rose-600 font-medium">Invalid format</span>}
+                {p.status === 'duplicate' && <span className="text-xs text-warning-tx font-medium">Exists</span>}
+                {p.status === 'invalid' && <span className="text-xs text-danger-tx font-medium">Invalid format</span>}
               </div>
             ))}
           </div>
@@ -226,7 +226,7 @@ Rules:
           {validCount > 0 && (
             <button
               onClick={handleImport}
-              className="w-full bg-blue-600 text-white py-4 rounded-2xl font-bold text-lg active:scale-[0.98] transition-all shadow-lg shadow-blue-200"
+              className="w-full bg-primary text-white py-4 rounded-2xl font-bold text-lg active:scale-[0.98] transition-all shadow-lg shadow-lg"
             >
               Import {validCount} {validCount === 1 ? 'Word' : 'Words'}
             </button>

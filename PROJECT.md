@@ -5,30 +5,33 @@ Lexuni is a fast, local-first English-Turkish vocabulary practice web app. It is
 
 ## Core Product Rules
 - Vocabulary is organized into simple import groups.
-- Groups represent import batches and can be merged.
-- Bulk deletion is supported for groups.
+- Groups represent import batches and can be merged via "Merge Imports" top-level button.
+- Bulk deletion is supported via multi-select modes, but hidden in standard group lists for cleanliness.
 - Practice uses random bidirectional questions (English ↔ Turkish).
 - Each question has 4 multiple-choice options.
-- Wrong answers clearly reveal the correct answer and are reinforced later in the cycle.
+- Correct answers highlight in green and automatically advance after a very brief pause (~400ms).
+- Wrong answers clearly reveal the correct answer in green, highlight the wrong selection in red, and require a deliberate "Tap to Continue" interaction before proceeding.
+- Wrong answers are reinforced later in the cycle.
 - A shuffle-bag algorithm prevents excessive repetition and ensures fair coverage.
 - Practice happens within Study Sessions that persist until explicitly finished.
 - Only one session can be active at a time.
 - Time spent away from the Practice screen automatically pauses the session timer.
-- Imported words and session history persist locally.
+- App styling supports a robust 5-color local-first Theme System (Light, Dark, Ocean, Forest, Sunset).
+- Imported words, session history, and selected theme persist locally.
 - Import uses Lexuni's simple custom text format with `# Group Name`.
 
 ## Tech Stack
 - React
 - TypeScript
 - Vite
-- Tailwind CSS v4
+- Tailwind CSS v4 (Using custom `@theme` semantic tokens like `--color-bg`, `--color-surface`, `--color-primary` in `index.css`)
 - Zustand (used minimally)
 - Dexie.js / IndexedDB
 - PWA Implementation (`vite-plugin-pwa`)
 
 ## Project Structure
 - `src/components/`: Reusable UI components and navigation.
-- `src/pages/`: Main application screens (Home, Practice, Words, Import, History, SessionDetail).
+- `src/pages/`: Main application screens (Home, Practice, Words, Import, History, SessionDetail, Settings).
 - `src/db/`: Dexie database configuration and models (Words, Groups, Sessions).
 - `src/types/`: TypeScript definitions.
 
@@ -69,6 +72,7 @@ export type StudySession = {
   currentWordId?: string;
   currentDirection?: "en-tr" | "tr-en";
   currentOptions?: string[];
+  selectedOptionId?: string;
   
   lastWordId?: string;
 };
@@ -79,12 +83,15 @@ export type StudySession = {
 - Bidirectional: mixes English → Turkish and Turkish → English questions randomly.
 - A shuffle-bag queue guarantees every word is tested before heavy repetition.
 - 3 incorrect options are drawn randomly from the active vocabulary pool, keeping the UI exactly at 4 options.
+- Correct answers: smooth UI feedback + auto-advance.
+- Wrong answers: stops timer + visual correction + deliberate user progression.
 - Wrong answers inject the failed word slightly later in the queue (reinforcement).
-- Real practice duration is paused automatically when the user leaves the Practice screen.
+- Real practice duration is paused automatically when the user leaves the Practice screen or pauses for a wrong answer.
 - Active sessions are protected against group deletion/merging until they are finished.
 
 ## Local Storage
 - Uses Dexie.js as a wrapper around IndexedDB.
+- Uses `localStorage` for visual preferences (e.g. `lexuni-theme`).
 - Database name: `LexuniDB`
 - Tables: `words`, `groups`, `sessions`, `sessionAnswers`
 - Schema versioning (V3): Migrated existing sessions by defaulting status to 'finished', introduced `activeDurationSeconds`, queues, and `status`.
