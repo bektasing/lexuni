@@ -2,6 +2,7 @@ import { useState } from 'react';
 import { db } from '../db/db';
 import { Import as ImportIcon, Sparkles, Copy, CheckCircle2, AlertCircle, Info } from 'lucide-react';
 import { useNavigate } from 'react-router-dom';
+import Modal from '../components/Modal';
 
 type ParsedWord = {
   english: string;
@@ -15,6 +16,7 @@ export default function ImportPage() {
   const [preview, setPreview] = useState<ParsedWord[] | null>(null);
   const [groupName, setGroupName] = useState<string>('');
   const [copied, setCopied] = useState(false);
+  const [importSuccess, setImportSuccess] = useState<{ count: number, duplicates: number, groupName: string, groupId: string } | null>(null);
   const navigate = useNavigate();
 
   const handlePreview = async () => {
@@ -95,8 +97,12 @@ export default function ImportPage() {
     await db.words.bulkAdd(newEntries);
     setInput('');
     setPreview(null);
-    alert(`Successfully imported ${validWords.length} words to group "${groupName}"!`);
-    navigate('/words');
+    setImportSuccess({
+      count: validWords.length,
+      duplicates: preview.filter(p => p.status === 'duplicate').length,
+      groupName: groupName,
+      groupId: groupId
+    });
   };
 
   const copyPrompt = () => {
@@ -233,6 +239,43 @@ Rules:
           )}
         </div>
       )}
+
+      <Modal 
+        isOpen={!!importSuccess} 
+        onClose={() => setImportSuccess(null)} 
+        title="Import Complete"
+      >
+        {importSuccess && (
+          <div className="space-y-4">
+            <div className="text-center py-4">
+              <div className="w-16 h-16 bg-success-bg text-success-tx rounded-full flex items-center justify-center mx-auto mb-4">
+                <CheckCircle2 size={32} />
+              </div>
+              <h3 className="text-2xl font-bold text-tx mb-2">{importSuccess.count} words added</h3>
+              <p className="text-tx-secondary font-medium mb-1">{importSuccess.groupName}</p>
+              {importSuccess.duplicates > 0 && (
+                <p className="text-tx-muted text-sm mt-2">{importSuccess.duplicates} duplicates skipped</p>
+              )}
+            </div>
+            <div className="flex gap-3 pt-2">
+              <button
+                onClick={() => setImportSuccess(null)}
+                className="flex-1 px-4 py-3 bg-surface text-tx-secondary font-bold rounded-xl border border-border active:bg-bg"
+              >
+                Done
+              </button>
+              <button
+                onClick={() => {
+                  navigate(`/words`);
+                }}
+                className="flex-1 px-4 py-3 bg-primary text-white font-bold rounded-xl active:bg-primary-hover"
+              >
+                View Group
+              </button>
+            </div>
+          </div>
+        )}
+      </Modal>
     </div>
   );
 }

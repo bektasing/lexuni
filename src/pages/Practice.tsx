@@ -2,7 +2,8 @@ import { useState, useEffect, useCallback } from 'react';
 import { useLiveQuery } from 'dexie-react-hooks';
 import { db } from '../db/db';
 import { useNavigate, useSearchParams } from 'react-router-dom';
-import { X, Check, XCircle, Play } from 'lucide-react';
+import Modal from '../components/Modal';
+import { X, Check, XCircle, Play, AlertTriangle } from 'lucide-react';
 import type { StudySession } from '../types';
 
 function shuffleArray<T>(array: T[]): T[] {
@@ -17,6 +18,7 @@ function shuffleArray<T>(array: T[]): T[] {
 export default function Practice() {
   const navigate = useNavigate();
   const [searchParams] = useSearchParams();
+  const [alertMessage, setAlertMessage] = useState<string | null>(null);
   const sourceParam = searchParams.get('source');
   const groupIdParam = searchParams.get('groupId');
   
@@ -103,7 +105,7 @@ export default function Practice() {
 
   const startSession = async (source: 'all' | 'group', gId: string | null = null) => {
     if (activeSession) {
-      alert("You already have a session in progress. Please finish it first.");
+      setAlertMessage("You already have a session in progress. Please finish it first.");
       return;
     }
 
@@ -372,6 +374,24 @@ export default function Practice() {
         <Play size={20} fill="currentColor" />
         <span>Start Session</span>
       </button>
+
+      <Modal isOpen={!!alertMessage} onClose={() => setAlertMessage(null)} title="Warning">
+        <div className="space-y-4 text-center">
+          <div className="w-16 h-16 bg-warning-bg text-warning-tx rounded-full flex items-center justify-center mx-auto mb-4">
+            <AlertTriangle size={32} />
+          </div>
+          <p className="text-tx font-medium">{alertMessage}</p>
+          <button
+            onClick={() => {
+              setAlertMessage(null);
+              navigate('/');
+            }}
+            className="w-full mt-4 px-4 py-3 bg-surface text-tx-secondary font-bold rounded-xl border border-border active:bg-bg"
+          >
+            Go Back
+          </button>
+        </div>
+      </Modal>
     </div>
   );
 }

@@ -1,8 +1,9 @@
 import { useState, useMemo } from 'react';
 import { useLiveQuery } from 'dexie-react-hooks';
 import { db } from '../db/db';
-import { Search, Plus, Edit2, Trash2, Download, X, Check, ChevronLeft, Play, Combine } from 'lucide-react';
+import { Search, Plus, Edit2, Trash2, Download, X, Check, ChevronLeft, Play, Combine, AlertTriangle } from 'lucide-react';
 import { useNavigate } from 'react-router-dom';
+import Modal from '../components/Modal';
 
 export default function Words() {
   const navigate = useNavigate();
@@ -18,6 +19,7 @@ export default function Words() {
   const [selectedGroupIds, setSelectedGroupIds] = useState<Set<string>>(new Set());
   const [isMerging, setIsMerging] = useState(false);
   const [mergeNameInput, setMergeNameInput] = useState('');
+  const [alertMessage, setAlertMessage] = useState<string | null>(null);
 
 
   // Word Detail State
@@ -72,7 +74,7 @@ export default function Words() {
     if (editingId) {
       const existing = await db.words.where('english').equalsIgnoreCase(en).first();
       if (existing && existing.id !== editingId) {
-        alert('This English word already exists.');
+        setAlertMessage('This English word already exists.');
         return;
       }
       await db.words.update(editingId, { english: en, turkish: tr });
@@ -80,7 +82,7 @@ export default function Words() {
     } else {
       const existing = await db.words.where('english').equalsIgnoreCase(en).first();
       if (existing) {
-        alert('This English word already exists.');
+        setAlertMessage('This English word already exists.');
         return;
       }
       await db.words.add({
@@ -135,7 +137,7 @@ export default function Words() {
 
   const handleDeleteGroup = async (id: string) => {
     if (activeSession && activeSession.groupId === id) {
-      alert('This group is currently being used by your active session. Finish the session first.');
+      setAlertMessage('This group is currently being used by your active session. Finish the session first.');
       setDeleteGroupConfirmId(null);
       return;
     }
@@ -157,7 +159,7 @@ export default function Words() {
 
     for (const id of Array.from(selectedGroupIds)) {
       if (activeSession && activeSession.groupId === id) {
-        alert('One of the selected groups is currently being used by your active session. Finish the session first.');
+        setAlertMessage('One of the selected groups is currently being used by your active session. Finish the session first.');
         setIsMerging(false);
         return;
       }
@@ -210,37 +212,7 @@ export default function Words() {
               <ChevronLeft size={20} />
               <span>Back</span>
             </button>
-            <div className="flex items-center space-x-2">
-              {isEditingGroup ? (
-                <div className="flex items-center space-x-2 w-full max-w-sm">
-                  <input
-                    type="text"
-                    value={groupNameInput}
-                    onChange={(e) => setGroupNameInput(e.target.value)}
-                    className="text-2xl sm:text-3xl font-bold text-tx bg-surface border-2 border-primary rounded-lg px-2 py-1 outline-none w-full"
-                    autoFocus
-                    onKeyDown={(e) => e.key === 'Enter' && handleSaveGroupName()}
-                  />
-                  <button onClick={handleSaveGroupName} className="p-2 bg-primary text-white hover:bg-primary-hover rounded-lg shrink-0">
-                    <Check size={20} />
-                  </button>
-                  <button onClick={() => setIsEditingGroup(false)} className="p-2 text-tx-secondary bg-surface-hover hover:bg-surface-hover rounded-lg shrink-0">
-                    <X size={20} />
-                  </button>
-                </div>
-              ) : (
-                <>
-                  <h1 className="text-3xl font-bold text-tx break-words">{selectedGroup.name}</h1>
-                  <button 
-                    onClick={() => { setIsEditingGroup(true); setGroupNameInput(selectedGroup.name); }} 
-                    className="p-1.5 text-tx-muted hover:text-primary hover:bg-primary-soft rounded-lg transition-colors shrink-0"
-                    title="Edit Group Name"
-                  >
-                    <Edit2 size={18} />
-                  </button>
-                </>
-              )}
-            </div>
+            <h1 className="text-3xl font-bold text-tx break-words">{selectedGroup.name}</h1>
             <p className="text-tx-secondary font-medium mt-1">{groupWords.length} words</p>
           </div>
           <div className="flex items-center space-x-2 shrink-0">
@@ -269,8 +241,15 @@ export default function Words() {
                   <Download size={20} />
                 </button>
                 <button
+                  onClick={() => { setIsEditingGroup(true); setGroupNameInput(selectedGroup.name); }}
+                  className="p-3 bg-surface border border-border rounded-xl text-tx-secondary hover:bg-bg active:bg-surface-hover shadow-sm"
+                  title="Rename Group"
+                >
+                  <Edit2 size={20} />
+                </button>
+                <button
                   onClick={() => setDeleteGroupConfirmId(selectedGroup.id)}
-                  className="p-3 bg-surface border border-border rounded-xl text-danger-tx hover:bg-danger-bg active:bg-rose-100 shadow-sm"
+                  className="p-3 bg-surface border border-border rounded-xl text-danger-tx hover:bg-danger-bg active:bg-danger-bg shadow-sm"
                   title="Delete Import"
                 >
                   <Trash2 size={20} />
@@ -279,6 +258,41 @@ export default function Words() {
             )}
           </div>
         </header>
+
+        <Modal isOpen={isEditingGroup} onClose={() => setIsEditingGroup(false)} title="Rename Group">
+          <div className="space-y-4">
+            <div>
+              <label className="block text-sm font-bold text-tx-secondary mb-2">Current name:</label>
+              <div className="text-tx font-medium bg-bg p-3 rounded-xl border border-border">{selectedGroup.name}</div>
+            </div>
+            <div>
+              <label className="block text-sm font-bold text-tx-secondary mb-2">New name:</label>
+              <input
+                type="text"
+                value={groupNameInput}
+                onChange={(e) => setGroupNameInput(e.target.value)}
+                className="w-full px-4 py-3 bg-bg rounded-xl outline-none focus:ring-2 focus:ring-primary border border-border"
+                autoFocus
+                onKeyDown={(e) => e.key === 'Enter' && handleSaveGroupName()}
+              />
+            </div>
+            <div className="flex gap-3 pt-2">
+              <button
+                onClick={() => setIsEditingGroup(false)}
+                className="flex-1 px-4 py-3 bg-surface text-tx-secondary font-bold rounded-xl border border-border active:bg-bg"
+              >
+                Cancel
+              </button>
+              <button
+                onClick={handleSaveGroupName}
+                disabled={!groupNameInput.trim()}
+                className="flex-1 px-4 py-3 bg-primary text-white font-bold rounded-xl disabled:opacity-50 active:bg-primary-hover"
+              >
+                Save
+              </button>
+            </div>
+          </div>
+        </Modal>
 
         <div className="bg-surface p-4 rounded-2xl shadow-sm border border-border mb-6 flex flex-col sm:flex-row gap-3">
           <div className="relative flex-1">
@@ -538,6 +552,21 @@ export default function Words() {
           </div>
         )}
       </div>
+
+      <Modal isOpen={!!alertMessage} onClose={() => setAlertMessage(null)} title="Warning">
+        <div className="space-y-4 text-center">
+          <div className="w-16 h-16 bg-warning-bg text-warning-tx rounded-full flex items-center justify-center mx-auto mb-4">
+            <AlertTriangle size={32} />
+          </div>
+          <p className="text-tx font-medium">{alertMessage}</p>
+          <button
+            onClick={() => setAlertMessage(null)}
+            className="w-full mt-4 px-4 py-3 bg-surface text-tx-secondary font-bold rounded-xl border border-border active:bg-bg"
+          >
+            Close
+          </button>
+        </div>
+      </Modal>
     </div>
   );
 }

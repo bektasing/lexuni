@@ -96,6 +96,13 @@ export type StudySession = {
 - Tables: `words`, `groups`, `sessions`, `sessionAnswers`
 - Schema versioning (V3): Migrated existing sessions by defaulting status to 'finished', introduced `activeDurationSeconds`, queues, and `status`.
 
+## Full Backup System
+- Entire Dexie database and `localStorage` preferences can be exported to a single `.json` file (`lexuni-backup-*`).
+- Backup files store format schema and app version.
+- Restoring a backup completely replaces the local database safely within a Dexie transaction.
+- Restore is completely local (no server sync).
+- Active sessions survive backup and restore seamlessly.
+
 ## Commands
 ```bash
 npm install
@@ -108,9 +115,11 @@ npm run preview
 - Import vocabulary from text.
 - AI import prompt generator.
 - List all words with search, sorting, and delete/edit.
+- Groups renaming via simple modal UI.
 - Practice mode with multiple-choice questions.
 - Home dashboard with statistics.
-- Export to `.txt` backup file.
+- Export to `.txt` vocabulary backup file.
+- Full Manual JSON Backup & Restore (portable persistent sessions, queues, stats, preferences).
 - PWA installable.
 
 ## Future Ideas
