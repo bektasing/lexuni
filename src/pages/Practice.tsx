@@ -19,6 +19,7 @@ export default function Practice() {
   const navigate = useNavigate();
   const [searchParams] = useSearchParams();
   const [alertMessage, setAlertMessage] = useState<string | null>(null);
+  const [isExiting, setIsExiting] = useState(false);
   const sourceParam = searchParams.get('source');
   const groupIdParam = searchParams.get('groupId');
   
@@ -179,15 +180,15 @@ export default function Practice() {
     });
 
     if (isCorrect) {
+      setTimeout(() => setIsExiting(true), 250);
+      
       setTimeout(async () => {
-        if (!activeSession) return;
-        await db.sessions.update(activeSession.id, {
-          currentWordId: undefined,
-          currentDirection: undefined,
-          currentOptions: undefined,
-          selectedOptionId: undefined
-        });
-      }, 400); // Fast auto-advance for correct
+        setIsExiting(false);
+        const latestSession = await db.sessions.get(activeSession.id);
+        if (latestSession) {
+          await generateNextQuestion(latestSession);
+        }
+      }, 450); 
     }
   };
 
@@ -255,7 +256,8 @@ export default function Practice() {
           </button>
         </header>
 
-        <main className="flex-1 flex flex-col p-6 sm:px-4">
+        <main className="flex-1 flex flex-col p-6 sm:px-4 overflow-hidden">
+          <div key={activeSession.currentWordId} className={`flex-1 flex flex-col w-full h-full ${isExiting ? 'motion-safe:animate-out motion-safe:fade-out motion-safe:slide-out-to-top-2 duration-200 ease-in' : 'motion-safe:animate-in motion-safe:fade-in motion-safe:slide-in-from-bottom-2 duration-300 ease-out'}`}>
           <div className="flex-1 flex flex-col items-center justify-center mb-8">
             <div className="text-sm font-bold uppercase tracking-widest text-tx-muted mb-4">Select the {meaningLabel}</div>
             <h1 className="text-4xl sm:text-5xl font-black text-tx text-center break-words max-w-full">
@@ -301,12 +303,14 @@ export default function Practice() {
             {isWaiting && selectedOptionId !== activeSession.currentWordId && (
               <button
                 onClick={handleContinueAfterWrong}
+                disabled={isExiting}
                 className="mt-6 p-4 bg-tx text-bg rounded-2xl font-bold text-lg flex items-center justify-center space-x-2 active:scale-[0.98] transition-transform animate-in fade-in slide-in-from-bottom-4 shadow-lg"
               >
                 <span>Tap to Continue</span>
               </button>
             )}
           </div>
+        </div>
         </main>
       </div>
     );
