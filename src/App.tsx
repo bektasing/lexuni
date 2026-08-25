@@ -1,5 +1,5 @@
-import { BrowserRouter as Router, Routes, Route, NavLink } from 'react-router-dom';
-import { Home as HomeIcon, Play, BookOpen, Import, History as HistoryIcon, Settings as SettingsIcon } from 'lucide-react';
+import { BrowserRouter as Router, Routes, Route, NavLink, Navigate } from 'react-router-dom';
+import { Home as HomeIcon, Play, BookOpen, History as HistoryIcon, Settings as SettingsIcon } from 'lucide-react';
 import Navigation from './components/Navigation';
 import Home from './pages/Home';
 import Practice from './pages/Practice';
@@ -15,7 +15,6 @@ function Sidebar() {
     { to: '/', icon: HomeIcon, label: 'Home' },
     { to: '/practice', icon: Play, label: 'Practice' },
     { to: '/words', icon: BookOpen, label: 'Words' },
-    { to: '/import', icon: Import, label: 'Import' },
     { to: '/history', icon: HistoryIcon, label: 'History' },
     { to: '/settings', icon: SettingsIcon, label: 'Settings' },
   ];
@@ -57,7 +56,8 @@ export default function App() {
             <Route path="/" element={<Home />} />
             <Route path="/practice" element={<Practice />} />
             <Route path="/words" element={<Words />} />
-            <Route path="/import" element={<ImportPage />} />
+            <Route path="/words/import" element={<ImportPage />} />
+            <Route path="/import" element={<Navigate to="/words/import" replace />} />
             <Route path="/history" element={<History />} />
             <Route path="/session/:id" element={<SessionDetail />} />
             <Route path="/settings" element={<SettingsPage />} />

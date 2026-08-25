@@ -1,7 +1,7 @@
 import { useState } from 'react';
 import { useLiveQuery } from 'dexie-react-hooks';
 import { db } from '../db/db';
-import { Settings as SettingsIcon, Check, Download, Upload, AlertTriangle, ExternalLink } from 'lucide-react';
+import { Settings as SettingsIcon, Check, Download, Upload, AlertTriangle, ExternalLink, ChevronDown, ChevronUp } from 'lucide-react';
 import Modal from '../components/Modal';
 import { useRef } from 'react';
 
@@ -25,6 +25,7 @@ export default function Settings() {
   const fileInputRef = useRef<HTMLInputElement>(null);
   const [restorePreview, setRestorePreview] = useState<any>(null);
   const [restoreError, setRestoreError] = useState<string | null>(null);
+  const [isThemeExpanded, setIsThemeExpanded] = useState(false);
 
   const handleExportBackup = async () => {
     const groups = await db.groups.toArray();
@@ -152,12 +153,27 @@ export default function Settings() {
       </header>
 
       <section className="mb-10">
-        <h2 className="text-xl font-bold text-tx mb-4 flex items-center space-x-2">
-          <SettingsIcon size={20} />
-          <span>App Theme</span>
-        </h2>
+        <div 
+          className="flex items-center justify-between cursor-pointer group mb-4"
+          onClick={() => setIsThemeExpanded(!isThemeExpanded)}
+        >
+          <div className="flex items-center space-x-2">
+            <h2 className="text-xl font-bold text-tx flex items-center space-x-2">
+              <SettingsIcon size={20} />
+              <span>App Theme</span>
+            </h2>
+          </div>
+          <div className="flex items-center space-x-3">
+            <span className="text-tx-secondary font-bold text-sm bg-surface px-3 py-1 rounded-lg border border-border">
+              {THEMES.find(t => t.id === activeTheme)?.name || 'Default'}
+            </span>
+            <div className="text-tx-muted group-hover:text-tx transition-colors bg-surface p-1 rounded-lg border border-border">
+              {isThemeExpanded ? <ChevronUp size={20} /> : <ChevronDown size={20} />}
+            </div>
+          </div>
+        </div>
         
-        <div className="grid grid-cols-1 sm:grid-cols-2 gap-4">
+        <div className={`grid grid-cols-1 sm:grid-cols-2 gap-4 transition-all duration-300 origin-top overflow-hidden ${isThemeExpanded ? 'opacity-100 max-h-[1000px] mt-4' : 'opacity-0 max-h-0'}`}>
           {THEMES.map((theme) => {
             const isActive = activeTheme === theme.id;
             return (
@@ -188,6 +204,28 @@ export default function Settings() {
       </section>
 
       <section className="mb-10">
+        <h2 className="text-xl font-bold text-tx mb-4">App Info</h2>
+        <div className="bg-surface rounded-2xl border border-border shadow-sm overflow-hidden">
+          <div className="p-4 flex items-center justify-between border-b border-border">
+            <span className="font-bold text-tx-secondary">Vocabulary Size</span>
+            <span className="text-tx-secondary font-medium">{wordsCount ?? '-'} words</span>
+          </div>
+          <div className="p-4 flex items-center justify-between border-b border-border">
+            <span className="font-bold text-tx-secondary">Import Groups</span>
+            <span className="text-tx-secondary font-medium">{groupsCount ?? '-'} groups</span>
+          </div>
+          <div className="p-4 flex items-center justify-between border-b border-border">
+            <span className="font-bold text-tx-secondary">Total Sessions</span>
+            <span className="text-tx-secondary font-medium">{sessionsCount ?? '-'} sessions</span>
+          </div>
+          <div className="p-4 flex items-center justify-between bg-bg">
+            <span className="font-bold text-tx-secondary">Lexuni Version</span>
+            <span className="text-tx-secondary font-medium">3.0.0</span>
+          </div>
+        </div>
+      </section>
+
+      <section>
         <h2 className="text-xl font-bold text-tx mb-4">Data Management</h2>
         <div className="bg-surface rounded-2xl border border-border shadow-sm overflow-hidden p-5">
           <p className="text-tx-secondary font-medium mb-5 leading-relaxed">
@@ -216,28 +254,6 @@ export default function Settings() {
               <Upload size={18} />
               <span>Import Backup</span>
             </button>
-          </div>
-        </div>
-      </section>
-      
-      <section>
-        <h2 className="text-xl font-bold text-tx mb-4">App Info</h2>
-        <div className="bg-surface rounded-2xl border border-border shadow-sm overflow-hidden">
-          <div className="p-4 flex items-center justify-between border-b border-border">
-            <span className="font-bold text-tx-secondary">Vocabulary Size</span>
-            <span className="text-tx-secondary font-medium">{wordsCount ?? '-'} words</span>
-          </div>
-          <div className="p-4 flex items-center justify-between border-b border-border">
-            <span className="font-bold text-tx-secondary">Import Groups</span>
-            <span className="text-tx-secondary font-medium">{groupsCount ?? '-'} groups</span>
-          </div>
-          <div className="p-4 flex items-center justify-between border-b border-border">
-            <span className="font-bold text-tx-secondary">Total Sessions</span>
-            <span className="text-tx-secondary font-medium">{sessionsCount ?? '-'} sessions</span>
-          </div>
-          <div className="p-4 flex items-center justify-between bg-bg">
-            <span className="font-bold text-tx-secondary">Lexuni Version</span>
-            <span className="text-tx-secondary font-medium">3.0.0</span>
           </div>
         </div>
       </section>

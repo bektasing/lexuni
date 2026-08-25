@@ -30,7 +30,7 @@ export default function Home() {
           Import your first words and start practicing.
         </p>
         <button
-          onClick={() => navigate('/import')}
+          onClick={() => navigate('/words/import')}
           className="bg-primary text-white px-8 py-4 rounded-2xl font-semibold text-lg flex items-center space-x-2 active:scale-95 transition-transform"
         >
           <Import size={24} />
@@ -169,7 +169,7 @@ export default function Home() {
 
           <div className="grid grid-cols-2 gap-3 mt-2">
             <button
-              onClick={() => navigate('/import')}
+              onClick={() => navigate('/words/import')}
               className="flex items-center justify-center space-x-2 py-3.5 bg-surface border-2 border-border text-tx-secondary rounded-2xl font-semibold active:bg-bg transition-colors"
             >
               <Import size={20} />

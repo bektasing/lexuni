@@ -1,18 +1,23 @@
-import { NavLink } from 'react-router-dom';
-import { Home, Play, BookOpen, History as HistoryIcon, Settings } from 'lucide-react';
+import re
 
-export default function Navigation() {
-  const navItems = [
+with open('src/components/Navigation.tsx', 'r') as f:
+    content = f.read()
+
+new_nav_items = """  const navItems = [
     { to: '/words', icon: BookOpen, label: 'Words' },
     { to: '/practice', icon: Play, label: 'Practice' },
     { to: '/', icon: Home, label: 'Home', isHome: true },
     { to: '/history', icon: HistoryIcon, label: 'History' },
     { to: '/settings', icon: Settings, label: 'Settings' },
-  ];
+  ];"""
 
-  return (
-    <nav className="fixed bottom-0 left-0 right-0 bg-surface border-t border-border pb-safe shadow-[0_-2px_10px_rgba(0,0,0,0.02)] z-50 sm:hidden">
-      <div className="flex justify-around items-center h-[4.5rem]">
+content = re.sub(r"  const navItems = \[.*?\];", new_nav_items, content, flags=re.DOTALL)
+
+# Remove Import from imports
+content = content.replace("import { Home, Play, BookOpen, Import, History as HistoryIcon, Settings } from 'lucide-react';", "import { Home, Play, BookOpen, History as HistoryIcon, Settings } from 'lucide-react';")
+
+# Update render
+new_render = """      <div className="flex justify-around items-center h-[4.5rem]">
         {navItems.map((item) => (
           <NavLink
             key={item.to}
@@ -33,7 +38,9 @@ export default function Navigation() {
             )}
           </NavLink>
         ))}
-      </div>
-    </nav>
-  );
-}
+      </div>"""
+
+content = re.sub(r'      <div className="flex justify-around items-center h-16">.*?      </div>', new_render, content, flags=re.DOTALL)
+
+with open('src/components/Navigation.tsx', 'w') as f:
+    f.write(content)

@@ -1,6 +1,6 @@
 import { useState } from 'react';
 import { db } from '../db/db';
-import { Import as ImportIcon, Sparkles, Copy, CheckCircle2, AlertCircle, Info } from 'lucide-react';
+import { Import as ImportIcon, Sparkles, Copy, CheckCircle2, AlertCircle, Info, ChevronLeft } from 'lucide-react';
 import { useNavigate } from 'react-router-dom';
 import Modal from '../components/Modal';
 
@@ -139,9 +139,17 @@ Rules:
 
   return (
     <div className="p-4 sm:p-6 pb-24 max-w-2xl mx-auto">
-      <header className="mb-8">
-        <h1 className="text-3xl font-bold text-tx">Import Words</h1>
-        <p className="text-tx-secondary font-medium mt-1">Paste your vocabulary list below.</p>
+      <header className="mb-8 flex items-center space-x-4">
+        <button 
+          onClick={() => navigate('/words')}
+          className="p-2 bg-surface hover:bg-surface-hover text-tx-secondary rounded-xl border border-border transition-colors"
+        >
+          <ChevronLeft size={24} />
+        </button>
+        <div>
+          <h1 className="text-3xl font-bold text-tx">Import Words</h1>
+          <p className="text-tx-secondary font-medium mt-1">Paste your vocabulary list below.</p>
+        </div>
       </header>
 
       <div className="bg-gradient-to-r from-blue-600 to-indigo-600 rounded-3xl p-6 text-white mb-8 shadow-lg shadow-lg">
