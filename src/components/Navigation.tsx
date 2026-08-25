@@ -1,5 +1,5 @@
 import { NavLink } from 'react-router-dom';
-import { Home, Play, BookOpen, Import } from 'lucide-react';
+import { Home, Play, BookOpen, Import, History as HistoryIcon } from 'lucide-react';
 
 export default function Navigation() {
   const navItems = [
@@ -7,6 +7,7 @@ export default function Navigation() {
     { to: '/practice', icon: Play, label: 'Practice' },
     { to: '/words', icon: BookOpen, label: 'Words' },
     { to: '/import', icon: Import, label: 'Import' },
+    { to: '/history', icon: HistoryIcon, label: 'History' },
   ];
 
   return (

@@ -13,18 +13,29 @@ type ParsedWord = {
 export default function ImportPage() {
   const [input, setInput] = useState('');
   const [preview, setPreview] = useState<ParsedWord[] | null>(null);
+  const [groupName, setGroupName] = useState<string>('');
   const [copied, setCopied] = useState(false);
   const navigate = useNavigate();
 
   const handlePreview = async () => {
     if (!input.trim()) return;
 
-    const lines = input.split('\n').map(l => l.trim()).filter(l => l && !l.startsWith('#'));
+    const rawLines = input.split('\n').map(l => l.trim()).filter(l => l);
+    const headerLine = rawLines.find(l => l.startsWith('#'));
+    
+    let parsedGroupName = `Imported Words - ${new Date().toLocaleDateString('en-US', { month: 'short', day: 'numeric', year: 'numeric' })}`;
+    if (headerLine) {
+      const cleanHeader = headerLine.replace(/^#+/, '').trim();
+      if (cleanHeader) parsedGroupName = cleanHeader;
+    }
+    setGroupName(parsedGroupName);
+
+    const lines = rawLines.filter(l => !l.startsWith('#'));
     const existingWords = await db.words.toArray();
     const existingSet = new Set(existingWords.map(w => w.english.toLowerCase()));
 
     const parsed: ParsedWord[] = [];
-    const newWordsSet = new Set<string>(); // to check duplicates within the same import
+    const newWordsSet = new Set<string>();
 
     for (const line of lines) {
       let separator = '';
@@ -63,8 +74,17 @@ export default function ImportPage() {
     const validWords = preview.filter(p => p.status === 'valid');
     if (validWords.length === 0) return;
 
+    const groupId = crypto.randomUUID();
+    
+    await db.groups.add({
+      id: groupId,
+      name: groupName,
+      createdAt: new Date().toISOString()
+    });
+
     const newEntries = validWords.map(w => ({
       id: crypto.randomUUID(),
+      groupId,
       english: w.english,
       turkish: w.turkish,
       createdAt: new Date().toISOString(),
@@ -75,7 +95,7 @@ export default function ImportPage() {
     await db.words.bulkAdd(newEntries);
     setInput('');
     setPreview(null);
-    alert(`Successfully imported ${validWords.length} words!`);
+    alert(`Successfully imported ${validWords.length} words to group "${groupName}"!`);
     navigate('/words');
   };
 
@@ -162,7 +182,8 @@ Rules:
 
       {preview && (
         <div className="bg-white p-6 rounded-3xl shadow-sm border border-slate-200 animate-in fade-in slide-in-from-bottom-4">
-          <h3 className="font-bold text-xl mb-4">Import Preview</h3>
+          <h3 className="font-bold text-xl mb-1">Import Preview</h3>
+          <p className="text-slate-500 font-medium mb-4">Group: <span className="text-slate-900 font-bold">{groupName}</span></p>
           
           <div className="grid grid-cols-3 gap-3 mb-6">
             <div className="bg-emerald-50 text-emerald-700 p-3 rounded-xl text-center">

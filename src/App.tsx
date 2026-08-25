@@ -1,10 +1,12 @@
 import { BrowserRouter as Router, Routes, Route, NavLink } from 'react-router-dom';
-import { Home as HomeIcon, Play, BookOpen, Import } from 'lucide-react';
+import { Home as HomeIcon, Play, BookOpen, Import, History as HistoryIcon } from 'lucide-react';
 import Navigation from './components/Navigation';
 import Home from './pages/Home';
 import Practice from './pages/Practice';
 import Words from './pages/Words';
 import ImportPage from './pages/Import';
+import History from './pages/History';
+import SessionDetail from './pages/SessionDetail';
 
 function Sidebar() {
   const navItems = [
@@ -12,6 +14,7 @@ function Sidebar() {
     { to: '/practice', icon: Play, label: 'Practice' },
     { to: '/words', icon: BookOpen, label: 'Words' },
     { to: '/import', icon: Import, label: 'Import' },
+    { to: '/history', icon: HistoryIcon, label: 'History' },
   ];
 
   return (
@@ -52,6 +55,8 @@ export default function App() {
             <Route path="/practice" element={<Practice />} />
             <Route path="/words" element={<Words />} />
             <Route path="/import" element={<ImportPage />} />
+            <Route path="/history" element={<History />} />
+            <Route path="/session/:id" element={<SessionDetail />} />
           </Routes>
         </main>
         <Navigation />

@@ -4,71 +4,90 @@
 Lexuni is a fast, local-first English-Turkish vocabulary practice web app. It is designed to be simple, clean, mobile-first, and optimized for quick repeated use. There is no backend, authentication, or external APIs. All data is persisted locally in the user's browser via IndexedDB.
 
 ## Core Product Rules
-- All vocabulary belongs to one global pool.
-- No category-based study system.
-- Practice uses random questions selected from the entire pool.
+- Vocabulary is organized into simple import groups.
+- Groups represent import batches and can be merged.
+- Bulk deletion is supported for groups.
+- Practice uses random bidirectional questions (English ↔ Turkish).
 - Each question has 4 multiple-choice options.
-- Wrong answers clearly reveal the correct answer.
-- Imported words persist locally.
-- Import uses Lexuni's simple custom text format.
+- Wrong answers clearly reveal the correct answer and are reinforced later in the cycle.
+- A shuffle-bag algorithm prevents excessive repetition and ensures fair coverage.
+- Practice happens within Study Sessions that persist until explicitly finished.
+- Only one session can be active at a time.
+- Time spent away from the Practice screen automatically pauses the session timer.
+- Imported words and session history persist locally.
+- Import uses Lexuni's simple custom text format with `# Group Name`.
 
 ## Tech Stack
 - React
 - TypeScript
 - Vite
-- Tailwind CSS
-- Zustand
+- Tailwind CSS v4
+- Zustand (used minimally)
 - Dexie.js / IndexedDB
 - PWA Implementation (`vite-plugin-pwa`)
 
 ## Project Structure
 - `src/components/`: Reusable UI components and navigation.
-- `src/pages/`: Main application screens (Home, Practice, Words, Import).
-- `src/stores/`: Zustand store for transient application state.
-- `src/db/`: Dexie database configuration and models.
-- `src/utils/`: Helper functions.
+- `src/pages/`: Main application screens (Home, Practice, Words, Import, History, SessionDetail).
+- `src/db/`: Dexie database configuration and models (Words, Groups, Sessions).
 - `src/types/`: TypeScript definitions.
 
 ## Data Model
 ```ts
+export type WordGroup = {
+  id: string;
+  name: string;
+  createdAt: string;
+};
+
 export type Word = {
-  id: string; // unique identifier (UUID)
+  id: string;
+  groupId: string;
   english: string;
   turkish: string;
-  createdAt: string; // ISO string
+  createdAt: string;
   correctCount: number;
   wrongCount: number;
 };
-```
 
-## Import Format
-```text
-# Optional Title
-
-reliable = güvenilir
-deploy = yayına almak
+export type StudySession = {
+  id: string;
+  status: "active" | "finished";
+  sourceType: "all" | "group";
+  groupId?: string;
+  groupName?: string;
+  startedAt: string;
+  finishedAt?: string;
+  totalAnswered: number;
+  correctCount: number;
+  wrongCount: number;
+  activeDurationSeconds: number;
+  
+  questionQueue: string[];
+  reinforcementQueue: string[];
+  
+  currentWordId?: string;
+  currentDirection?: "en-tr" | "tr-en";
+  currentOptions?: string[];
+  
+  lastWordId?: string;
+};
 ```
-- `#` comments are ignored.
-- Blank lines are ignored.
-- Lines without English or Turkish parts are invalid.
-- Duplicates (case-insensitive on the English word) are ignored.
-- Tolerates whitespace around separators `=`, `:`, or `-`.
 
 ## Practice Logic
-- A question presents an English word and asks for the Turkish meaning among 4 options.
-- The correct option is the word's `turkish` value.
-- 3 incorrect options are drawn randomly from the rest of the vocabulary pool.
-- The order of options is randomized.
-- Words are not repeated consecutively.
-- After a correct answer, the selected button turns green, and the next question loads after 600ms.
-- After a wrong answer, the selected button turns red, the correct button turns green, and the next question loads after 1200ms.
-- Word's `correctCount` or `wrongCount` is incremented accordingly.
+- A session exists until the user explicitly finishes it.
+- Bidirectional: mixes English → Turkish and Turkish → English questions randomly.
+- A shuffle-bag queue guarantees every word is tested before heavy repetition.
+- 3 incorrect options are drawn randomly from the active vocabulary pool, keeping the UI exactly at 4 options.
+- Wrong answers inject the failed word slightly later in the queue (reinforcement).
+- Real practice duration is paused automatically when the user leaves the Practice screen.
+- Active sessions are protected against group deletion/merging until they are finished.
 
 ## Local Storage
 - Uses Dexie.js as a wrapper around IndexedDB.
 - Database name: `LexuniDB`
-- Tables: `words`
-- Schema versioning is used to manage upgrades if necessary.
+- Tables: `words`, `groups`, `sessions`, `sessionAnswers`
+- Schema versioning (V3): Migrated existing sessions by defaulting status to 'finished', introduced `activeDurationSeconds`, queues, and `status`.
 
 ## Commands
 ```bash
