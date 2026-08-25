@@ -56,6 +56,21 @@ body {
   --color-danger-border: var(--danger-border);
   --color-danger-btn: var(--danger-btn);
   --color-danger-btn-hover: var(--danger-btn-hover);
+
+  --animate-shake: shake 250ms ease-in-out;
+  --animate-correct-pulse: subtle-pulse 300ms ease-out forwards;
+  
+  @keyframes shake {
+    0%, 100% { transform: translateX(0); }
+    20%, 60% { transform: translateX(-4px); }
+    40%, 80% { transform: translateX(4px); }
+  }
+  
+  @keyframes subtle-pulse {
+    0% { transform: scale(1); }
+    30% { transform: scale(1.025); }
+    100% { transform: scale(1); }
+  }
 }
 
 :root {

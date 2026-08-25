@@ -1,7 +1,7 @@
 import { useState } from 'react';
 import { useLiveQuery } from 'dexie-react-hooks';
 import { db } from '../db/db';
-import { Settings as SettingsIcon, Check, Download, Upload, AlertTriangle } from 'lucide-react';
+import { Settings as SettingsIcon, Check, Download, Upload, AlertTriangle, ExternalLink } from 'lucide-react';
 import Modal from '../components/Modal';
 import { useRef } from 'react';
 
@@ -239,6 +239,25 @@ export default function Settings() {
             <span className="font-bold text-tx-secondary">Lexuni Version</span>
             <span className="text-tx-secondary font-medium">3.0.0</span>
           </div>
+        </div>
+      </section>
+
+      <section className="mt-10">
+        <h2 className="text-xl font-bold text-tx mb-4">Developer</h2>
+        <div className="bg-surface rounded-2xl border border-border shadow-sm overflow-hidden p-5 flex flex-col sm:flex-row sm:items-center justify-between gap-4">
+          <div>
+            <h3 className="font-bold text-tx text-lg">Hamza Bektaş</h3>
+            <p className="text-tx-secondary font-medium">Developer of Lexuni</p>
+          </div>
+          <a
+            href="https://hamzabektas.xyz"
+            target="_blank"
+            rel="noopener noreferrer"
+            className="flex-1 sm:flex-none flex items-center justify-center space-x-2 bg-surface text-tx-secondary hover:text-tx py-3 px-5 rounded-xl border border-border font-bold active:bg-bg hover:bg-surface-hover transition-colors"
+          >
+            <span>Visit Website</span>
+            <ExternalLink size={18} />
+          </a>
         </div>
       </section>
 

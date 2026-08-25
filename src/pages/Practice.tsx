@@ -20,7 +20,7 @@ export default function Practice() {
   const [searchParams] = useSearchParams();
   const [alertMessage, setAlertMessage] = useState<string | null>(null);
   const [isExiting, setIsExiting] = useState(false);
-  const sourceParam = searchParams.get('source');
+   const sourceParam = searchParams.get('source');
   const groupIdParam = searchParams.get('groupId');
   
   const words = useLiveQuery(() => db.words.toArray());
@@ -33,6 +33,7 @@ export default function Practice() {
 
   const isWaiting = !!(activeSession && activeSession.selectedOptionId);
   const selectedOptionId = activeSession?.selectedOptionId || null;
+  const feedback = isWaiting && activeSession ? (selectedOptionId === activeSession.currentWordId ? 'correct' : 'wrong') : null;
 
   // Timer interval
   useEffect(() => {
@@ -103,6 +104,25 @@ export default function Practice() {
       generateNextQuestion(activeSession);
     }
   }, [activeSession, isWaiting, generateNextQuestion]);
+
+
+  // Safeguard: If the user refreshed the page exactly during the 460ms correct-answer transition, 
+  // the DB might have saved the selected option but the timeout was lost, leaving them stuck.
+  useEffect(() => {
+    if (activeSession && isWaiting && activeSession.selectedOptionId === activeSession.currentWordId) {
+      const timer = setTimeout(async () => {
+        setIsExiting(true);
+        setTimeout(async () => {
+          setIsExiting(false);
+          const latestSession = await db.sessions.get(activeSession.id);
+          if (latestSession) {
+            await generateNextQuestion(latestSession);
+          }
+        }, 160);
+      }, 500);
+      return () => clearTimeout(timer);
+    }
+  }, [activeSession?.id, activeSession?.currentWordId, activeSession?.selectedOptionId, isWaiting]);
 
   const startSession = async (source: 'all' | 'group', gId: string | null = null) => {
     if (activeSession) {
@@ -180,26 +200,31 @@ export default function Practice() {
     });
 
     if (isCorrect) {
-      setTimeout(() => setIsExiting(true), 250);
+      
+      setTimeout(() => setIsExiting(true), 300);
       
       setTimeout(async () => {
         setIsExiting(false);
+        
         const latestSession = await db.sessions.get(activeSession.id);
         if (latestSession) {
           await generateNextQuestion(latestSession);
         }
-      }, 450); 
+      }, 460); 
     }
   };
 
   const handleContinueAfterWrong = async () => {
     if (!activeSession) return;
-    await db.sessions.update(activeSession.id, {
-      currentWordId: undefined,
-      currentDirection: undefined,
-      currentOptions: undefined,
-      selectedOptionId: undefined
-    });
+    setIsExiting(true);
+    
+    setTimeout(async () => {
+      setIsExiting(false);
+      const latestSession = await db.sessions.get(activeSession.id);
+      if (latestSession) {
+        await generateNextQuestion(latestSession);
+      }
+    }, 160);
   };
 
   const finishSession = async () => {
@@ -256,17 +281,26 @@ export default function Practice() {
           </button>
         </header>
 
-        <main className="flex-1 flex flex-col p-6 sm:px-4 overflow-hidden">
-          <div key={activeSession.currentWordId} className={`flex-1 flex flex-col w-full h-full ${isExiting ? 'motion-safe:animate-out motion-safe:fade-out motion-safe:slide-out-to-top-2 duration-200 ease-in' : 'motion-safe:animate-in motion-safe:fade-in motion-safe:slide-in-from-bottom-2 duration-300 ease-out'}`}>
-          <div className="flex-1 flex flex-col items-center justify-center mb-8">
+        <main className="flex-1 flex flex-col p-6 sm:px-4 overflow-hidden relative">
+          {feedback && (
+            <div className={`absolute inset-0 pointer-events-none transition-opacity duration-300 ${feedback === 'correct' ? 'bg-[radial-gradient(ellipse_at_center,_var(--color-emerald-500)_0%,_transparent_60%)] opacity-[0.08]' : 'bg-[radial-gradient(ellipse_at_center,_var(--color-rose-500)_0%,_transparent_60%)] opacity-[0.08]'}`} />
+          )}
+          <div key={activeSession.currentWordId} className="flex-1 flex flex-col w-full h-full relative z-10">
+          <div className={`flex-1 flex flex-col items-center justify-center mb-8 ${isExiting ? 'motion-safe:animate-out motion-safe:fade-out motion-safe:slide-out-to-top-4 duration-150' : 'motion-safe:animate-in motion-safe:fade-in motion-safe:slide-in-from-bottom-4 duration-200 ease-out'}`}>
             <div className="text-sm font-bold uppercase tracking-widest text-tx-muted mb-4">Select the {meaningLabel}</div>
             <h1 className="text-4xl sm:text-5xl font-black text-tx text-center break-words max-w-full">
               {questionText}
             </h1>
+            {feedback === 'correct' && (
+              <div className="text-success-tx font-bold text-sm uppercase tracking-widest mt-4 animate-in fade-in slide-in-from-bottom-1">Correct</div>
+            )}
+            {feedback === 'wrong' && (
+              <div className="text-danger-tx font-bold text-sm uppercase tracking-widest mt-4 animate-in fade-in slide-in-from-bottom-1">Not quite</div>
+            )}
           </div>
 
           <div className="grid grid-cols-1 gap-3 w-full max-w-md mx-auto">
-            {activeSession.currentOptions.map((optId) => {
+            {activeSession.currentOptions.map((optId, i) => {
               const optWord = words.find(w => w.id === optId);
               if (!optWord) return null;
 
@@ -278,9 +312,11 @@ export default function Practice() {
               
               if (isWaiting) {
                 if (isCorrect) {
-                  btnClass = "bg-emerald-500 border-emerald-500 text-white shadow-lg shadow-lg";
+                  btnClass = "bg-emerald-500 border-emerald-500 text-white shadow-lg motion-safe:animate-correct-pulse z-10";
                 } else if (isSelected && !isCorrect) {
-                  btnClass = "bg-rose-500 border-rose-500 text-white shadow-lg shadow-lg";
+                  btnClass = "bg-rose-500 border-rose-500 text-white shadow-lg motion-safe:animate-shake z-10";
+                } else if (!isSelected && isCorrect) {
+                  btnClass = "bg-emerald-500 border-emerald-500 text-white shadow-lg motion-safe:animate-correct-pulse z-10";
                 } else {
                   btnClass = "bg-surface border-2 border-border text-tx-muted opacity-50";
                 }
@@ -291,7 +327,8 @@ export default function Practice() {
                   key={optId}
                   disabled={isWaiting}
                   onClick={() => handleAnswer(optId)}
-                  className={`p-5 rounded-2xl font-bold text-lg text-left transition-all duration-200 flex items-center justify-between ${btnClass}`}
+                  className={`p-5 rounded-2xl font-bold text-lg text-left transition-all duration-200 flex items-center justify-between ${btnClass} ${isExiting ? 'motion-safe:animate-out motion-safe:fade-out motion-safe:slide-out-to-top-4 duration-150' : 'motion-safe:animate-in motion-safe:fade-in motion-safe:slide-in-from-bottom-4 duration-200 ease-out'}`}
+                  style={isWaiting ? (!isSelected && isCorrect ? { animationDelay: '100ms' } : {}) : (isExiting ? {} : { animationDelay: `${i * 25}ms`, animationFillMode: 'both' })}
                 >
                   <span>{optionText}</span>
                   {isWaiting && isCorrect && <Check size={24} className="animate-in zoom-in" />}
@@ -304,7 +341,7 @@ export default function Practice() {
               <button
                 onClick={handleContinueAfterWrong}
                 disabled={isExiting}
-                className="mt-6 p-4 bg-tx text-bg rounded-2xl font-bold text-lg flex items-center justify-center space-x-2 active:scale-[0.98] transition-transform animate-in fade-in slide-in-from-bottom-4 shadow-lg"
+                className="mt-6 p-4 bg-tx text-bg rounded-2xl font-bold text-lg flex items-center justify-center space-x-2 active:scale-[0.98] transition-transform animate-in fade-in slide-in-from-bottom-4 shadow-lg" style={{ animationDelay: '300ms', animationFillMode: 'both' }}
               >
                 <span>Tap to Continue</span>
               </button>
