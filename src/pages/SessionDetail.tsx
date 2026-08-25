@@ -36,7 +36,7 @@ export default function SessionDetail() {
   const mistakes = answers.filter(a => !a.correct);
 
   return (
-    <div className="p-4 sm:p-6 pb-24 max-w-2xl mx-auto">
+    <div className="p-4 sm:p-6 pb-24 max-w-2xl mx-auto page-enter">
       <header className="mb-8 flex items-center justify-between">
         <button 
           onClick={() => navigate('/history')}

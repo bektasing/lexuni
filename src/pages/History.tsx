@@ -20,7 +20,7 @@ export default function History() {
   const sortedSessions = sessions.sort((a, b) => b.startedAt.localeCompare(a.startedAt));
 
   return (
-    <div className="p-4 sm:p-6 pb-24 max-w-2xl mx-auto">
+    <div className="p-4 sm:p-6 pb-24 max-w-2xl mx-auto page-enter">
       <header className="mb-8 flex items-center justify-between">
         <div>
           <h1 className="text-3xl font-bold text-tx">History</h1>

@@ -1,17 +1,31 @@
 import { useState } from 'react';
 import { useLiveQuery } from 'dexie-react-hooks';
 import { db } from '../db/db';
-import { Settings as SettingsIcon, Check, Download, Upload, AlertTriangle, ExternalLink, ChevronDown, ChevronUp } from 'lucide-react';
+import { Settings as SettingsIcon, Check, Download, Upload, AlertTriangle, ExternalLink, ChevronDown } from 'lucide-react';
 import Modal from '../components/Modal';
 import { useRef } from 'react';
 
 const THEMES = [
-  { id: 'light', name: 'Light', description: 'Clean default', color: 'bg-[#f8fafc]', accent: 'bg-[#2563eb]' },
-  { id: 'dark', name: 'Dark', description: 'Deep contrast', color: 'bg-[#020617]', accent: 'bg-[#3b82f6]' },
-  { id: 'ocean', name: 'Ocean', description: 'Calm & fresh', color: 'bg-[#f0f9ff]', accent: 'bg-[#0891b2]' },
-  { id: 'forest', name: 'Forest', description: 'Natural green', color: 'bg-[#fafaf9]', accent: 'bg-[#0d9488]' },
-  { id: 'sunset', name: 'Sunset', description: 'Warm amber', color: 'bg-[#fff7ed]', accent: 'bg-[#d97706]' },
+  { id: 'arctic', name: 'Arctic', description: 'Clean default', preview: { bg: '#f8fafc', surface: '#ffffff', accent: '#2563eb' } },
+  { id: 'midnight', name: 'Midnight', description: 'Deep contrast', preview: { bg: '#0f172a', surface: '#1e293b', accent: '#38bdf8' } },
+  { id: 'ocean', name: 'Ocean', description: 'Calm & fresh', preview: { bg: '#ecfeff', surface: '#ffffff', accent: '#0891b2' } },
+  { id: 'forest', name: 'Forest', description: 'Natural green', preview: { bg: '#f0fdf4', surface: '#ffffff', accent: '#16a34a' } },
+  { id: 'sunset', name: 'Sunset', description: 'Warm amber', preview: { bg: '#fff7ed', surface: '#ffffff', accent: '#ea580c' } },
+  { id: 'violet', name: 'Violet', description: 'Creative plum', preview: { bg: '#faf5ff', surface: '#ffffff', accent: '#9333ea' } },
 ];
+
+function ThemeChip({ preview, compact = false }: { preview: { bg: string, surface: string, accent: string }, compact?: boolean }) {
+  return (
+    <div 
+      className={`rounded-md border border-black/10 shadow-sm overflow-hidden flex shrink-0 ${compact ? 'w-10 h-[22px]' : 'w-14 h-8'}`}
+    >
+      <div className="flex-1" style={{ backgroundColor: preview.bg }} />
+      <div className="flex-1" style={{ backgroundColor: preview.surface }} />
+      <div className={`${compact ? 'w-1.5' : 'w-2'} shrink-0`} style={{ backgroundColor: preview.accent }} />
+    </div>
+  );
+}
+
 
 export default function Settings() {
   const wordsCount = useLiveQuery(() => db.words.count());
@@ -19,7 +33,10 @@ export default function Settings() {
   const sessionsCount = useLiveQuery(() => db.sessions.count());
   
   const [activeTheme, setActiveTheme] = useState(() => {
-    return localStorage.getItem('lexuni-theme') || 'light';
+    let stored = localStorage.getItem('lexuni-theme') || 'arctic';
+    if (stored === 'light') stored = 'arctic';
+    if (stored === 'dark') stored = 'midnight';
+    return stored;
   });
 
   const fileInputRef = useRef<HTMLInputElement>(null);
@@ -138,7 +155,7 @@ export default function Settings() {
   const handleThemeChange = (themeId: string) => {
     setActiveTheme(themeId);
     localStorage.setItem('lexuni-theme', themeId);
-    if (themeId === 'light') {
+    if (themeId === 'arctic') {
       document.documentElement.removeAttribute('data-theme');
     } else {
       document.documentElement.setAttribute('data-theme', themeId);
@@ -146,7 +163,7 @@ export default function Settings() {
   };
 
   return (
-    <div className="p-4 sm:p-6 pb-24 max-w-3xl mx-auto">
+    <div className="p-4 sm:p-6 pb-24 max-w-3xl mx-auto page-enter">
       <header className="mb-8">
         <h1 className="text-3xl font-bold text-tx">Settings</h1>
         <p className="text-tx-secondary font-medium mt-1">Preferences and app info</p>
@@ -164,11 +181,12 @@ export default function Settings() {
             </h2>
           </div>
           <div className="flex items-center space-x-3">
-            <span className="text-tx-secondary font-bold text-sm bg-surface px-3 py-1 rounded-lg border border-border">
-              {THEMES.find(t => t.id === activeTheme)?.name || 'Default'}
-            </span>
+            {(() => {
+              const active = THEMES.find(t => t.id === activeTheme);
+              return active ? <ThemeChip preview={active.preview} compact /> : null;
+            })()}
             <div className="text-tx-muted group-hover:text-tx transition-colors bg-surface p-1 rounded-lg border border-border">
-              {isThemeExpanded ? <ChevronUp size={20} /> : <ChevronDown size={20} />}
+              <ChevronDown size={20} className={`transition-transform duration-200 ${isThemeExpanded ? 'rotate-180' : ''}`} />
             </div>
           </div>
         </div>
@@ -180,13 +198,12 @@ export default function Settings() {
               <button
                 key={theme.id}
                 onClick={() => handleThemeChange(theme.id)}
-                className={`p-4 rounded-2xl border-2 text-left transition-all flex items-center space-x-4 ${
+                className={`p-4 rounded-2xl border-2 text-left flex items-center space-x-4 hover-card tap-card ${
                   isActive ? 'border-primary bg-primary-soft ring-2 ring-primary-soft' : 'border-border bg-surface hover:border-border-strong hover:bg-bg'
                 }`}
               >
-                <div className={`w-12 h-12 rounded-xl flex shrink-0 shadow-inner overflow-hidden border border-border ${theme.color}`}>
-                  <div className="w-1/2 h-full bg-transparent"></div>
-                  <div className={`w-1/2 h-full ${theme.accent} opacity-90`}></div>
+                <div className="mr-2">
+                  <ThemeChip preview={theme.preview} />
                 </div>
                 <div className="flex-1">
                   <h3 className="font-bold text-tx text-lg">{theme.name}</h3>
@@ -205,7 +222,7 @@ export default function Settings() {
 
       <section className="mb-10">
         <h2 className="text-xl font-bold text-tx mb-4">App Info</h2>
-        <div className="bg-surface rounded-2xl border border-border shadow-sm overflow-hidden">
+        <div className="bg-surface rounded-2xl border border-border shadow-sm overflow-hidden hover-card">
           <div className="p-4 flex items-center justify-between border-b border-border">
             <span className="font-bold text-tx-secondary">Vocabulary Size</span>
             <span className="text-tx-secondary font-medium">{wordsCount ?? '-'} words</span>
@@ -227,7 +244,7 @@ export default function Settings() {
 
       <section>
         <h2 className="text-xl font-bold text-tx mb-4">Data Management</h2>
-        <div className="bg-surface rounded-2xl border border-border shadow-sm overflow-hidden p-5">
+        <div className="bg-surface rounded-2xl border border-border shadow-sm overflow-hidden p-5 hover-card">
           <p className="text-tx-secondary font-medium mb-5 leading-relaxed">
             Export your Lexuni data to move it to another device or keep a personal backup.
           </p>
@@ -260,7 +277,7 @@ export default function Settings() {
 
       <section className="mt-10">
         <h2 className="text-xl font-bold text-tx mb-4">Developer</h2>
-        <div className="bg-surface rounded-2xl border border-border shadow-sm overflow-hidden p-5 flex flex-col sm:flex-row sm:items-center justify-between gap-4">
+        <div className="bg-surface rounded-2xl border border-border shadow-sm overflow-hidden p-5 flex flex-col sm:flex-row sm:items-center justify-between gap-4 hover-card">
           <div>
             <h3 className="font-bold text-tx text-lg">Hamza Bektaş</h3>
             <p className="text-tx-secondary font-medium">Developer of Lexuni</p>
@@ -285,7 +302,7 @@ export default function Settings() {
           <p className="text-tx font-medium">{restoreError}</p>
           <button
             onClick={() => setRestoreError(null)}
-            className="w-full mt-4 px-4 py-3 bg-surface text-tx-secondary font-bold rounded-xl border border-border active:bg-bg"
+            className="w-full mt-4 px-4 py-3 bg-surface text-tx-secondary font-bold rounded-xl border border-border btn-primary"
           >
             Close
           </button>

@@ -138,7 +138,7 @@ Rules:
   const invalidCount = preview?.filter(p => p.status === 'invalid').length || 0;
 
   return (
-    <div className="p-4 sm:p-6 pb-24 max-w-2xl mx-auto">
+    <div className="p-4 sm:p-6 pb-24 max-w-2xl mx-auto page-enter">
       <header className="mb-8 flex items-center space-x-4">
         <button 
           onClick={() => navigate('/words')}
@@ -162,14 +162,14 @@ Rules:
         </p>
         <button
           onClick={copyPrompt}
-          className="flex items-center justify-center w-full space-x-2 bg-surface/20 hover:bg-surface/30 text-white py-3 rounded-xl font-semibold transition-colors active:scale-[0.98]"
+          className="flex items-center justify-center w-full space-x-2 bg-surface/20 hover:bg-surface/30 text-white py-3 rounded-xl font-semibold btn-primary"
         >
           {copied ? <CheckCircle2 size={18} /> : <Copy size={18} />}
           <span>{copied ? 'Copied!' : 'Copy AI Prompt'}</span>
         </button>
       </div>
 
-      <div className="bg-surface p-4 rounded-3xl shadow-sm border border-border mb-6">
+      <div className="bg-surface p-4 rounded-3xl shadow-sm border border-border mb-6 hover-card">
         <div className="flex items-start justify-between mb-2">
           <label className="font-bold text-tx-secondary ml-2">Vocabulary List</label>
           <div className="text-xs text-tx-muted bg-surface-hover px-2 py-1 rounded font-mono">word = meaning</div>
@@ -187,7 +187,7 @@ Rules:
         <button
           onClick={handlePreview}
           disabled={!input.trim()}
-          className="w-full mt-4 flex items-center justify-center space-x-2 bg-tx text-bg py-4 rounded-2xl font-bold text-lg disabled:opacity-50 disabled:active:scale-100 active:scale-[0.98] transition-all"
+          className="w-full mt-4 flex items-center justify-center space-x-2 bg-tx text-bg py-4 rounded-2xl font-bold text-lg disabled:opacity-50 disabled:active:scale-100 btn-primary"
         >
           <ImportIcon size={20} />
           <span>Preview Import</span>
@@ -240,7 +240,7 @@ Rules:
           {validCount > 0 && (
             <button
               onClick={handleImport}
-              className="w-full bg-primary text-white py-4 rounded-2xl font-bold text-lg active:scale-[0.98] transition-all shadow-lg shadow-lg"
+              className="w-full bg-primary text-white py-4 rounded-2xl font-bold text-lg btn-primary shadow-lg"
             >
               Import {validCount} {validCount === 1 ? 'Word' : 'Words'}
             </button>

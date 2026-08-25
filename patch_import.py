@@ -3,70 +3,16 @@ import re
 with open('src/pages/Import.tsx', 'r') as f:
     content = f.read()
 
-# Add Modal import
-content = content.replace("import { useNavigate } from 'react-router-dom';", "import { useNavigate } from 'react-router-dom';\nimport Modal from '../components/Modal';")
+# Main container
+content = content.replace('className="p-4 sm:p-6 pb-24 max-w-2xl mx-auto"', 'className="p-4 sm:p-6 pb-24 max-w-2xl mx-auto page-enter"')
 
-# Add state for importSuccess
-state_insert_pos = content.find("const [copied, setCopied] = useState(false);")
-if state_insert_pos != -1:
-    content = content[:state_insert_pos] + "const [copied, setCopied] = useState(false);\n  const [importSuccess, setImportSuccess] = useState<{ count: number, duplicates: number, groupName: string, groupId: string } | null>(null);" + content[state_insert_pos+44:]
+# Cards
+content = content.replace('className="bg-surface p-4 rounded-3xl shadow-sm border border-border mb-6"', 'className="bg-surface p-4 rounded-3xl shadow-sm border border-border mb-6 hover-card"')
 
-# Replace alert with state update
-handle_import_replace = """    setInput('');
-    setPreview(null);
-    setImportSuccess({
-      count: validWords.length,
-      duplicates: duplicateCount,
-      groupName: groupName,
-      groupId: groupId
-    });
-  };"""
-
-content = re.sub(r"    setInput\(''\);\n    setPreview\(null\);\n    alert\(`Successfully imported \${validWords\.length} words to group \"\${groupName}\"!`\);\n    navigate\('/words'\);\n  };", handle_import_replace, content)
-
-# Add Modal at the end of the return statement
-modal_code = """
-      <Modal 
-        isOpen={!!importSuccess} 
-        onClose={() => setImportSuccess(null)} 
-        title="Import Complete"
-      >
-        {importSuccess && (
-          <div className="space-y-4">
-            <div className="text-center py-4">
-              <div className="w-16 h-16 bg-success-bg text-success-tx rounded-full flex items-center justify-center mx-auto mb-4">
-                <CheckCircle2 size={32} />
-              </div>
-              <h3 className="text-2xl font-bold text-tx mb-2">{importSuccess.count} words added</h3>
-              <p className="text-tx-secondary font-medium mb-1">{importSuccess.groupName}</p>
-              {importSuccess.duplicates > 0 && (
-                <p className="text-tx-muted text-sm mt-2">{importSuccess.duplicates} duplicates skipped</p>
-              )}
-            </div>
-            <div className="flex gap-3 pt-2">
-              <button
-                onClick={() => setImportSuccess(null)}
-                className="flex-1 px-4 py-3 bg-surface text-tx-secondary font-bold rounded-xl border border-border active:bg-bg"
-              >
-                Done
-              </button>
-              <button
-                onClick={() => {
-                  navigate(`/words`);
-                }}
-                className="flex-1 px-4 py-3 bg-primary text-white font-bold rounded-xl active:bg-primary-hover"
-              >
-                View Group
-              </button>
-            </div>
-          </div>
-        )}
-      </Modal>
-    </div>
-  );
-}"""
-
-content = content.replace("    </div>\n  );\n}", modal_code)
+# Buttons
+content = content.replace('className="flex items-center justify-center w-full space-x-2 bg-surface/20 hover:bg-surface/30 text-white py-3 rounded-xl font-semibold transition-colors active:scale-[0.98]"', 'className="flex items-center justify-center w-full space-x-2 bg-surface/20 hover:bg-surface/30 text-white py-3 rounded-xl font-semibold btn-primary"')
+content = content.replace('className="w-full mt-4 flex items-center justify-center space-x-2 bg-tx text-bg py-4 rounded-2xl font-bold text-lg disabled:opacity-50 disabled:active:scale-100 active:scale-[0.98] transition-all"', 'className="w-full mt-4 flex items-center justify-center space-x-2 bg-tx text-bg py-4 rounded-2xl font-bold text-lg disabled:opacity-50 disabled:active:scale-100 btn-primary"')
+content = content.replace('className="w-full bg-primary text-white py-4 rounded-2xl font-bold text-lg active:scale-[0.98] transition-all shadow-lg shadow-lg"', 'className="w-full bg-primary text-white py-4 rounded-2xl font-bold text-lg btn-primary shadow-lg"')
 
 with open('src/pages/Import.tsx', 'w') as f:
     f.write(content)

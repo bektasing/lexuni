@@ -1,4 +1,9 @@
-import { useEffect, useState } from 'react';
+import re
+
+with open('src/components/Modal.tsx', 'r') as f:
+    content = f.read()
+
+new_modal = """import { useEffect, useState } from 'react';
 import type { ReactNode } from 'react';
 
 type ModalProps = {
@@ -57,3 +62,7 @@ export default function Modal({ isOpen, onClose, title, children }: ModalProps) 
     </div>
   );
 }
+"""
+
+with open('src/components/Modal.tsx', 'w') as f:
+    f.write(new_modal)

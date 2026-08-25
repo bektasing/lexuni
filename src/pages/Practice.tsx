@@ -275,7 +275,7 @@ export default function Practice() {
           </div>
           <button 
             onClick={finishSession}
-            className="px-4 py-2 bg-surface-hover text-tx-secondary hover:bg-surface-hover rounded-xl font-bold text-sm transition-colors"
+            className="px-4 py-2 bg-surface-hover text-tx-secondary hover:bg-border font-bold text-sm btn-primary"
           >
             Finish
           </button>
@@ -327,7 +327,7 @@ export default function Practice() {
                   key={optId}
                   disabled={isWaiting}
                   onClick={() => handleAnswer(optId)}
-                  className={`p-5 rounded-2xl font-bold text-lg text-left transition-all duration-200 flex items-center justify-between ${btnClass} ${isExiting ? 'motion-safe:animate-out motion-safe:fade-out motion-safe:slide-out-to-top-4 duration-150' : 'motion-safe:animate-in motion-safe:fade-in motion-safe:slide-in-from-bottom-4 duration-200 ease-out'}`}
+                  className={`p-5 rounded-2xl font-bold text-lg text-left transition-all duration-200 flex items-center justify-between hover:shadow-md tap-card ${btnClass} ${isExiting ? 'motion-safe:animate-out motion-safe:fade-out motion-safe:slide-out-to-top-4 duration-150' : 'motion-safe:animate-in motion-safe:fade-in motion-safe:slide-in-from-bottom-4 duration-200 ease-out'}`}
                   style={isWaiting ? (!isSelected && isCorrect ? { animationDelay: '100ms' } : {}) : (isExiting ? {} : { animationDelay: `${i * 25}ms`, animationFillMode: 'both' })}
                 >
                   <span>{optionText}</span>
@@ -375,7 +375,7 @@ export default function Practice() {
   }
 
   return (
-    <div className="p-4 sm:p-6 pb-24 max-w-xl mx-auto">
+    <div className="p-4 sm:p-6 pb-24 max-w-xl mx-auto page-enter">
       <header className="mb-8">
         <h1 className="text-3xl font-bold text-tx">Practice Setup</h1>
         <p className="text-tx-secondary font-medium mt-1">Select what you want to practice.</p>
@@ -384,7 +384,7 @@ export default function Practice() {
       <div className="space-y-4">
         <div 
           onClick={() => { setSelectedSource('all'); setSelectedGroupId(null); }}
-          className={`p-5 rounded-2xl border-2 cursor-pointer transition-colors ${selectedSource === 'all' ? 'border-primary bg-primary-soft' : 'border-border bg-surface hover:border-border-strong'}`}
+          className={`p-5 rounded-2xl border-2 cursor-pointer transition-all hover-card tap-card ${selectedSource === 'all' ? 'border-primary bg-primary-soft' : 'border-border bg-surface hover:border-border-strong'}`}
         >
           <h3 className="font-bold text-lg text-tx">All Words</h3>
           <p className="text-tx-secondary font-medium">{words.length} words</p>
@@ -399,7 +399,7 @@ export default function Practice() {
             <div 
               key={g.id}
               onClick={() => { setSelectedSource('group'); setSelectedGroupId(g.id); }}
-              className={`p-5 rounded-2xl border-2 cursor-pointer transition-colors ${isSelected ? 'border-primary bg-primary-soft' : 'border-border bg-surface hover:border-border-strong'}`}
+              className={`p-5 rounded-2xl border-2 cursor-pointer transition-all hover-card tap-card ${isSelected ? 'border-primary bg-primary-soft' : 'border-border bg-surface hover:border-border-strong'}`}
             >
               <h3 className="font-bold text-lg text-tx">{g.name}</h3>
               <p className="text-tx-secondary font-medium">{count} words</p>
@@ -410,7 +410,7 @@ export default function Practice() {
 
       <button
         onClick={() => startSession(selectedSource, selectedGroupId)}
-        className="w-full mt-8 bg-primary text-white py-4 rounded-2xl font-bold text-lg flex items-center justify-center space-x-2 active:scale-[0.98] transition-transform shadow-lg shadow-lg"
+        className="w-full mt-8 bg-primary text-white py-4 rounded-2xl font-bold text-lg flex items-center justify-center space-x-2 btn-primary shadow-lg"
       >
         <Play size={20} fill="currentColor" />
         <span>Start Session</span>

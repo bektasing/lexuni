@@ -202,7 +202,7 @@ export default function Words() {
 
   if (selectedGroupId && selectedGroup) {
     return (
-      <div className="p-4 sm:p-6 pb-24 max-w-3xl mx-auto">
+      <div className="p-4 sm:p-6 pb-24 max-w-3xl mx-auto page-enter">
         <header className="mb-6 flex items-start justify-between">
           <div className="flex-1 pr-4">
             <button 
@@ -440,7 +440,7 @@ export default function Words() {
   };
 
   return (
-    <div className="p-4 sm:p-6 pb-24 max-w-3xl mx-auto">
+    <div className="p-4 sm:p-6 pb-24 max-w-3xl mx-auto page-enter">
       <header className="mb-6 flex flex-col sm:flex-row sm:items-center justify-between gap-4">
         <div>
           <h1 className="text-3xl font-bold text-tx">Vocabulary</h1>
@@ -452,7 +452,7 @@ export default function Words() {
           {!isMerging && (groups?.length || 0) > 1 && (
             <button
               onClick={() => setIsMerging(true)}
-              className="flex-1 sm:flex-none flex items-center justify-center space-x-2 px-4 py-2.5 bg-surface border border-border text-tx-secondary font-bold rounded-xl hover:bg-surface-hover transition-colors"
+              className="flex-1 sm:flex-none flex items-center justify-center space-x-2 px-4 py-2.5 bg-surface border border-border text-tx-secondary font-bold rounded-xl hover:bg-surface-hover btn-primary"
             >
               <Combine size={18} />
               <span>Merge</span>
@@ -460,7 +460,7 @@ export default function Words() {
           )}
           <button
             onClick={() => navigate('/words/import')}
-            className="flex-1 sm:flex-none flex items-center justify-center space-x-2 px-4 py-2.5 bg-primary text-white font-bold rounded-xl hover:bg-primary-hover transition-colors"
+            className="flex-1 sm:flex-none flex items-center justify-center space-x-2 px-4 py-2.5 bg-primary text-white font-bold rounded-xl hover:bg-primary-hover btn-primary"
           >
             <Import size={18} />
             <span>Import Words</span>
@@ -515,7 +515,7 @@ export default function Words() {
           return (
             <div 
               key={group.id} 
-              className={`bg-surface p-5 rounded-2xl shadow-sm border transition-colors flex flex-col sm:flex-row sm:items-center justify-between gap-4 ${isSelected ? 'border-primary ring-2 ring-primary-soft' : 'border-border'}`}
+              className={`bg-surface p-5 rounded-2xl shadow-sm border transition-all flex flex-col sm:flex-row sm:items-center justify-between gap-4 hover-card tap-card ${isSelected ? 'border-primary ring-2 ring-primary-soft' : 'border-border'}`}
               onClick={isMerging ? () => toggleGroupSelection(group.id) : undefined}
             >
               <div className="flex items-center space-x-4 flex-1">
@@ -538,13 +538,13 @@ export default function Words() {
                 <div className="flex items-center gap-2">
                   <button
                     onClick={() => setSelectedGroupId(group.id)}
-                    className="flex-1 sm:flex-none flex items-center justify-center space-x-1 px-5 py-2.5 bg-surface-hover text-tx-secondary rounded-xl font-bold hover:bg-surface-hover"
+                    className="flex-1 sm:flex-none flex items-center justify-center space-x-1 px-5 py-2.5 bg-surface-hover text-tx-secondary rounded-xl font-bold btn-primary hover:bg-border"
                   >
                     View
                   </button>
                   <button
                     onClick={() => navigate(`/practice?source=group&groupId=${group.id}`)}
-                    className="flex-1 sm:flex-none flex items-center justify-center space-x-1 px-5 py-2.5 bg-primary-soft text-primary rounded-xl font-bold hover:bg-primary-soft"
+                    className="flex-1 sm:flex-none flex items-center justify-center space-x-1 px-5 py-2.5 bg-primary-soft text-primary rounded-xl font-bold btn-primary hover:opacity-80"
                   >
                     <Play size={16} fill="currentColor" />
                     <span>Practice</span>

@@ -1,4 +1,4 @@
-import { BrowserRouter as Router, Routes, Route, NavLink, Navigate } from 'react-router-dom';
+import { BrowserRouter as Router, Routes, Route, NavLink, Navigate, useLocation } from 'react-router-dom';
 import { Home as HomeIcon, Play, BookOpen, History as HistoryIcon, Settings as SettingsIcon } from 'lucide-react';
 import Navigation from './components/Navigation';
 import Home from './pages/Home';
@@ -11,6 +11,7 @@ import SessionDetail from './pages/SessionDetail';
 import SettingsPage from './pages/Settings';
 
 function Sidebar() {
+  const location = useLocation();
   const navItems = [
     { to: '/', icon: HomeIcon, label: 'Home' },
     { to: '/practice', icon: Play, label: 'Practice' },
@@ -29,13 +30,17 @@ function Sidebar() {
           <NavLink
             key={item.to}
             to={item.to}
-            className={({ isActive }) =>
-              `flex items-center space-x-3 px-4 py-3 rounded-xl font-medium transition-colors ${
-                isActive
-                  ? 'bg-primary-soft text-primary'
+            className={() => {
+              // Robust matching for desktop sidebar too
+              const path = location.pathname;
+              const isMatch = item.to === '/' ? path === '/' : path.startsWith(item.to) || (item.to === '/history' && path.startsWith('/session/'));
+              
+              return `flex items-center space-x-3 px-4 py-3 rounded-xl font-bold transition-all duration-150 ${
+                isMatch
+                  ? 'bg-nav-active text-primary translate-x-1'
                   : 'text-tx-secondary hover:bg-surface-hover hover:text-tx'
-              }`
-            }
+              }`;
+            }}
           >
             <item.icon size={20} strokeWidth={2.5} />
             <span>{item.label}</span>

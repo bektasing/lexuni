@@ -1,4 +1,6 @@
-@import "tailwindcss";
+import re
+
+css = """@import "tailwindcss";
 
 :root {
   font-family: -apple-system, BlinkMacSystemFont, "Segoe UI", Roboto, Helvetica, Arial, sans-serif;
@@ -79,16 +81,22 @@ body {
 
 /* Base Global Animations & Layout */
 html, body, #root {
-  @apply motion-safe:transition-colors motion-safe:duration-150 ease-out;
+  @apply transition-colors duration-150 ease-out;
 }
 
 *, ::before, ::after {
-  @apply motion-safe:transition-colors motion-safe:duration-150 ease-out;
+  @apply transition-colors duration-150 ease-out;
 }
 
 /* Opt-out colors transition for specific things if needed, but Tailwind handles classes */
 
-
+@media (prefers-reduced-motion: reduce) {
+  *, ::before, ::after {
+    transition-duration: 0.01ms !important;
+    animation-duration: 0.01ms !important;
+    animation-iteration-count: 1 !important;
+  }
+}
 
 /* 1. Arctic (Default) */
 :root {
@@ -314,29 +322,20 @@ html, body, #root {
 
 /* Global Micro-Interactions */
 .hover-card {
-  @apply motion-safe:transition-all duration-200 ease-out motion-safe:hover:-translate-y-0.5 hover:shadow-md hover:border-border-strong;
+  @apply transition-all duration-200 ease-out hover:-translate-y-0.5 hover:shadow-md hover:border-border-strong;
 }
 .tap-card {
-  @apply motion-safe:transition-transform duration-150 ease-out motion-safe:active:scale-[0.985];
+  @apply transition-transform duration-150 ease-out active:scale-[0.985];
 }
 .btn-primary {
-  @apply motion-safe:transition-all duration-150 ease-out motion-safe:active:scale-95;
+  @apply transition-all duration-150 ease-out active:scale-95;
 }
 
 /* Page Entry Animations */
-@keyframes page-enter {
-  from { opacity: 0; transform: translateY(8px); }
-  to { opacity: 1; transform: translateY(0); }
-}
 .page-enter {
-  animation: page-enter 200ms ease-out forwards;
+  @apply motion-safe:animate-in motion-safe:fade-in motion-safe:slide-in-from-bottom-2 duration-200 ease-out;
 }
-@media (prefers-reduced-motion: reduce) {
-  .page-enter {
-    animation: fade-in-only 150ms ease-out forwards;
-  }
-  @keyframes fade-in-only {
-    from { opacity: 0; }
-    to { opacity: 1; }
-  }
-}
+"""
+
+with open('src/index.css', 'w') as f:
+    f.write(css)
