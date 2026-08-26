@@ -139,18 +139,18 @@ npm run preview
 ## Theming and Motion (v3.1)
 
 ### Theme Architecture
-Lexuni supports 6 high-quality, distinct themes using a strict CSS variable semantic token system (`index.css`):
-1. **Arctic (Default)** - Clean neutral light theme, strong blue accent.
-2. **Midnight** - Premium dark theme, deep navy background with electric blue accent.
-3. **Ocean** - Cool aquatic cyan/teal.
-4. **Forest** - Muted sage / natural green.
-5. **Sunset** - Warm ivory and amber/orange.
-6. **Violet** - Soft lavender and deep plum with violet accents.
+Lexuni supports 6 highly distinct themes using a strict CSS variable semantic token system (`index.css`):
+1. **Arctic (Default)** - Clean neutral light theme, airy spacing, crisp white surfaces, strong blue accent.
+2. **Midnight** - Premium dark mode, deep navy background, cool blue/cyan accent.
+3. **Developer** - Code-editor inspired, charcoal background, lime/cyan accent, slightly squared corners.
+4. **Lingo** - Energetic language-learning feel, highly rounded corners, strong friendly shadows, bright green accent.
+5. **Battery** - OLED-friendly ultra dark, true black background, high-contrast borders, minimal shadows.
+6. **Sunset** - Heavy warm earthy theme, sand background, deep cream cards, terracotta/burnt-orange accent.
 
 Each theme guarantees readability by redefining colors like `--bg`, `--surface`, `--tx`, `--primary`, and `--nav-active`. Semantic learning feedback colors (`--success-*`, `--danger-*`) remain globally consistent across all themes to preserve learning integrity.
 
 ### Static Palette Previews
-In `Settings.tsx`, each theme defines static `preview` colors (`{ bg, surface, accent }`). These render as mini dual-surface UI chips (like tiny UI swatches), replacing the old multi-dot palette. This decoupling prevents preview cards from visually mutating when the global active theme changes.
+In `Settings.tsx`, each theme defines static `preview` colors (`{ bg, accent }`). These render as clean, 2-color mini UI chips alongside a simple Lucide icon, completely replacing the old messy multi-dot palettes. Persisted preferences from legacy themes (Ocean, Forest, Violet) safely auto-migrate to Arctic on startup.
 
 ### Motion & Micro-Interactions
 The app utilizes lightweight, premium motion:

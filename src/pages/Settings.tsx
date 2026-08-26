@@ -1,27 +1,27 @@
 import { useState } from 'react';
 import { useLiveQuery } from 'dexie-react-hooks';
 import { db } from '../db/db';
-import { Settings as SettingsIcon, Check, Download, Upload, AlertTriangle, ExternalLink, ChevronDown } from 'lucide-react';
+import { Settings as SettingsIcon, Check, Download, Upload, AlertTriangle, ExternalLink, ChevronDown, Snowflake, Sun, Moon, Terminal, MessageCircle, Battery } from 'lucide-react';
 import Modal from '../components/Modal';
 import { useRef } from 'react';
 
 const THEMES = [
-  { id: 'arctic', name: 'Arctic', description: 'Clean default', preview: { bg: '#f8fafc', surface: '#ffffff', accent: '#2563eb' } },
-  { id: 'midnight', name: 'Midnight', description: 'Deep contrast', preview: { bg: '#0f172a', surface: '#1e293b', accent: '#38bdf8' } },
-  { id: 'ocean', name: 'Ocean', description: 'Calm & fresh', preview: { bg: '#ecfeff', surface: '#ffffff', accent: '#0891b2' } },
-  { id: 'forest', name: 'Forest', description: 'Natural green', preview: { bg: '#f0fdf4', surface: '#ffffff', accent: '#16a34a' } },
-  { id: 'sunset', name: 'Sunset', description: 'Warm amber', preview: { bg: '#fff7ed', surface: '#ffffff', accent: '#ea580c' } },
-  { id: 'violet', name: 'Violet', description: 'Creative plum', preview: { bg: '#faf5ff', surface: '#ffffff', accent: '#9333ea' } },
+  { id: 'arctic', name: 'Arctic', icon: Snowflake, description: 'Clean & crisp', preview: { bg: '#f8fafc', accent: '#2563eb' } },
+  { id: 'midnight', name: 'Midnight', icon: Moon, description: 'Deep navy', preview: { bg: '#0f172a', accent: '#38bdf8' } },
+  { id: 'developer', name: 'Developer', icon: Terminal, description: 'Editor inspired', preview: { bg: '#181818', accent: '#61D9E8' } },
+  { id: 'lingo', name: 'Lingo', icon: MessageCircle, description: 'Bright & playful', preview: { bg: '#f9fafb', accent: '#58cc02' } },
+  { id: 'battery', name: 'Battery', icon: Battery, description: 'OLED dark', preview: { bg: '#000000', accent: '#9ca3af' } },
+  { id: 'sunset', name: 'Sunset', icon: Sun, description: 'Warm & bold', preview: { bg: '#faf0e6', accent: '#d9534f' } },
 ];
 
-function ThemeChip({ preview, compact = false }: { preview: { bg: string, surface: string, accent: string }, compact?: boolean }) {
+
+function ThemeChip({ preview, compact = false }: { preview: { bg: string, accent: string }, compact?: boolean }) {
   return (
     <div 
-      className={`rounded-md border border-black/10 shadow-sm overflow-hidden flex shrink-0 ${compact ? 'w-10 h-[22px]' : 'w-14 h-8'}`}
+      className={`rounded-md border border-black/10 shadow-sm overflow-hidden flex shrink-0 ${compact ? 'w-10 h-[22px]' : 'w-12 h-8'}`}
     >
       <div className="flex-1" style={{ backgroundColor: preview.bg }} />
-      <div className="flex-1" style={{ backgroundColor: preview.surface }} />
-      <div className={`${compact ? 'w-1.5' : 'w-2'} shrink-0`} style={{ backgroundColor: preview.accent }} />
+      <div className={`${compact ? 'w-2' : 'w-3'} shrink-0`} style={{ backgroundColor: preview.accent }} />
     </div>
   );
 }
@@ -34,7 +34,7 @@ export default function Settings() {
   
   const [activeTheme, setActiveTheme] = useState(() => {
     let stored = localStorage.getItem('lexuni-theme') || 'arctic';
-    if (stored === 'light') stored = 'arctic';
+    if (['light', 'ocean', 'forest', 'violet'].includes(stored)) stored = 'arctic';
     if (stored === 'dark') stored = 'midnight';
     return stored;
   });
@@ -183,7 +183,12 @@ export default function Settings() {
           <div className="flex items-center space-x-3">
             {(() => {
               const active = THEMES.find(t => t.id === activeTheme);
-              return active ? <ThemeChip preview={active.preview} compact /> : null;
+              return active ? (
+                <div className="flex items-center space-x-2">
+                  <active.icon size={16} className="text-tx-secondary hidden sm:block" />
+                  <ThemeChip preview={active.preview} compact />
+                </div>
+              ) : null;
             })()}
             <div className="text-tx-muted group-hover:text-tx transition-colors bg-surface p-1 rounded-lg border border-border">
               <ChevronDown size={20} className={`transition-transform duration-200 ${isThemeExpanded ? 'rotate-180' : ''}`} />
@@ -202,12 +207,15 @@ export default function Settings() {
                   isActive ? 'border-primary bg-primary-soft ring-2 ring-primary-soft' : 'border-border bg-surface hover:border-border-strong hover:bg-bg'
                 }`}
               >
-                <div className="mr-2">
-                  <ThemeChip preview={theme.preview} />
+                <div className="mr-3">
+                  <theme.icon size={20} className="text-tx-secondary" />
                 </div>
                 <div className="flex-1">
                   <h3 className="font-bold text-tx text-lg">{theme.name}</h3>
                   <p className="text-tx-secondary text-sm font-medium">{theme.description}</p>
+                </div>
+                <div className="mr-1 flex items-center">
+                  <ThemeChip preview={theme.preview} />
                 </div>
                 {isActive && (
                   <div className="w-6 h-6 bg-primary rounded-full flex items-center justify-center text-white shrink-0">

@@ -5,7 +5,7 @@ import App from './App.tsx';
 import { ErrorBoundary } from './ErrorBoundary.tsx';
 
 let savedTheme = localStorage.getItem('lexuni-theme') || 'arctic';
-if (savedTheme === 'light') savedTheme = 'arctic';
+if (['light', 'ocean', 'forest', 'violet'].includes(savedTheme)) savedTheme = 'arctic';
 if (savedTheme === 'dark') savedTheme = 'midnight';
 
 if (savedTheme !== 'arctic') {
