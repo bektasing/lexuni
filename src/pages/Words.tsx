@@ -2,17 +2,19 @@ import { useState, useMemo } from 'react';
 import { useLiveQuery } from 'dexie-react-hooks';
 import { db } from '../db/db';
 import { Search, Plus, Edit2, Trash2, Download, X, Check, ChevronLeft, Play, Combine, AlertTriangle, Import } from 'lucide-react';
-import { useNavigate } from 'react-router-dom';
+import { useNavigate, useSearchParams } from 'react-router-dom';
 import Modal from '../components/Modal';
+import ConfirmDialog from '../components/ConfirmDialog';
 
 export default function Words() {
   const navigate = useNavigate();
+  const [searchParams] = useSearchParams();
   const groups = useLiveQuery(() => db.groups.toArray());
   const words = useLiveQuery(() => db.words.toArray());
   const activeSessions = useLiveQuery(() => db.sessions.where('status').equals('active').toArray());
   const activeSession = activeSessions && activeSessions.length > 0 ? activeSessions[0] : null;
   
-  const [selectedGroupId, setSelectedGroupId] = useState<string | null>(null);
+  const [selectedGroupId, setSelectedGroupId] = useState<string | null>(() => searchParams.get('groupId'));
   
   // Group List State
   const [deleteGroupConfirmId, setDeleteGroupConfirmId] = useState<string | null>(null);
@@ -20,6 +22,7 @@ export default function Words() {
   const [isMerging, setIsMerging] = useState(false);
   const [mergeNameInput, setMergeNameInput] = useState('');
   const [alertMessage, setAlertMessage] = useState<string | null>(null);
+  const [isDeleting, setIsDeleting] = useState(false);
 
 
   // Word Detail State
@@ -126,12 +129,19 @@ export default function Words() {
   };
 
   const handleDeleteWord = async (id: string) => {
-    await db.words.delete(id);
-    setDeleteConfirmId(null);
-    // Auto-delete group if it becomes empty
-    if (groupWords.length === 1 && selectedGroupId) {
-      await db.groups.delete(selectedGroupId);
-      setSelectedGroupId(null);
+    if (isDeleting) return;
+    setIsDeleting(true);
+    try {
+      await db.words.delete(id);
+      setDeleteConfirmId(null);
+      // Auto-delete group if it becomes empty
+      if (groupWords.length === 1 && selectedGroupId) {
+        await db.groups.delete(selectedGroupId);
+        setSelectedGroupId(null);
+        navigate('/words', { replace: true });
+      }
+    } finally {
+      setIsDeleting(false);
     }
   };
 
@@ -141,14 +151,24 @@ export default function Words() {
       setDeleteGroupConfirmId(null);
       return;
     }
-    const wordsInGroup = await db.words.where({ groupId: id }).toArray();
-    const wordIds = wordsInGroup.map(w => w.id);
-    if (wordIds.length > 0) {
-      await db.words.bulkDelete(wordIds);
+    if (isDeleting) return;
+    setIsDeleting(true);
+    try {
+      await db.transaction('rw', db.words, db.groups, async () => {
+        const wordsInGroup = await db.words.where({ groupId: id }).toArray();
+        const wordIds = wordsInGroup.map(w => w.id);
+        if (wordIds.length > 0) await db.words.bulkDelete(wordIds);
+        await db.groups.delete(id);
+      });
+      setDeleteGroupConfirmId(null);
+      setSelectedGroupIds(prev => { const n = new Set(prev); n.delete(id); return n; });
+      if (selectedGroupId === id) {
+        setSelectedGroupId(null);
+        navigate('/words', { replace: true });
+      }
+    } finally {
+      setIsDeleting(false);
     }
-    await db.groups.delete(id);
-    setDeleteGroupConfirmId(null);
-    setSelectedGroupIds(prev => { const n = new Set(prev); n.delete(id); return n; });
   };
 
 
@@ -161,6 +181,8 @@ export default function Words() {
       if (activeSession && activeSession.groupId === id) {
         setAlertMessage('One of the selected groups is currently being used by your active session. Finish the session first.');
         setIsMerging(false);
+        setSelectedGroupIds(new Set());
+        setMergeNameInput('');
         return;
       }
     }
@@ -200,13 +222,46 @@ export default function Words() {
     setMergeNameInput('');
   };
 
+  const cancelMerge = () => {
+    setIsMerging(false);
+    setSelectedGroupIds(new Set());
+    setMergeNameInput('');
+  };
+
+  const warningModal = (
+    <Modal
+      isOpen={!!alertMessage}
+      onClose={() => setAlertMessage(null)}
+      title="Warning"
+      footer={
+        <button
+          type="button"
+          onClick={() => setAlertMessage(null)}
+          className="min-h-11 w-full rounded-xl bg-primary px-4 py-3 font-bold text-white hover:bg-primary-hover"
+        >
+          Done
+        </button>
+      }
+    >
+      <div className="flex gap-4">
+        <div className="flex size-11 shrink-0 items-center justify-center rounded-2xl bg-warning-bg text-warning-tx">
+          <AlertTriangle size={22} aria-hidden="true" />
+        </div>
+        <p className="self-center leading-relaxed text-tx-secondary">{alertMessage}</p>
+      </div>
+    </Modal>
+  );
+
   if (selectedGroupId && selectedGroup) {
     return (
       <div className="p-4 sm:p-6 pb-24 max-w-3xl mx-auto page-enter">
         <header className="mb-6 flex items-start justify-between">
           <div className="flex-1 pr-4">
             <button 
-              onClick={() => setSelectedGroupId(null)}
+              onClick={() => {
+                setSelectedGroupId(null);
+                navigate('/words', { replace: true });
+              }}
               className="flex items-center space-x-1 text-tx-secondary hover:text-tx mb-2 font-medium"
             >
               <ChevronLeft size={20} />
@@ -216,50 +271,57 @@ export default function Words() {
             <p className="text-tx-secondary font-medium mt-1">{groupWords.length} words</p>
           </div>
           <div className="flex items-center space-x-2 shrink-0">
-            {deleteGroupConfirmId === selectedGroup.id ? (
-              <div className="flex items-center space-x-2 bg-danger-bg p-2 rounded-xl border border-danger-border">
-                <button 
-                  onClick={() => setDeleteGroupConfirmId(null)}
-                  className="px-3 py-1.5 bg-surface text-tx-secondary font-bold rounded-lg border border-border text-sm"
-                >
-                  Cancel
-                </button>
-                <button 
-                  onClick={() => handleDeleteGroup(selectedGroup.id)}
-                  className="px-3 py-1.5 bg-danger-btn text-white font-bold rounded-lg text-sm"
-                >
-                  Confirm Delete
-                </button>
-              </div>
-            ) : (
-              <>
-                <button
-                  onClick={handleExport}
-                  className="p-3 bg-surface border border-border rounded-xl text-tx-secondary hover:bg-bg active:bg-surface-hover shadow-sm"
-                  title="Export Backup"
-                >
-                  <Download size={20} />
-                </button>
-                <button
-                  onClick={() => { setIsEditingGroup(true); setGroupNameInput(selectedGroup.name); }}
-                  className="p-3 bg-surface border border-border rounded-xl text-tx-secondary hover:bg-bg active:bg-surface-hover shadow-sm"
-                  title="Rename Group"
-                >
-                  <Edit2 size={20} />
-                </button>
-                <button
-                  onClick={() => setDeleteGroupConfirmId(selectedGroup.id)}
-                  className="p-3 bg-surface border border-border rounded-xl text-danger-tx hover:bg-danger-bg active:bg-danger-bg shadow-sm"
-                  title="Delete Import"
-                >
-                  <Trash2 size={20} />
-                </button>
-              </>
-            )}
+            <button
+              onClick={handleExport}
+              className="p-3 bg-surface border border-border rounded-xl text-tx-secondary hover:bg-bg active:bg-surface-hover shadow-sm"
+              title="Export Backup"
+              aria-label="Export group"
+            >
+              <Download size={20} />
+            </button>
+            <button
+              onClick={() => { setIsEditingGroup(true); setGroupNameInput(selectedGroup.name); }}
+              className="p-3 bg-surface border border-border rounded-xl text-tx-secondary hover:bg-bg active:bg-surface-hover shadow-sm"
+              title="Rename Group"
+              aria-label="Rename group"
+            >
+              <Edit2 size={20} />
+            </button>
+            <button
+              onClick={() => setDeleteGroupConfirmId(selectedGroup.id)}
+              className="p-3 bg-surface border border-border rounded-xl text-danger-tx hover:bg-danger-bg active:bg-danger-bg shadow-sm"
+              title="Delete Import"
+              aria-label="Delete group"
+            >
+              <Trash2 size={20} />
+            </button>
           </div>
         </header>
 
-        <Modal isOpen={isEditingGroup} onClose={() => setIsEditingGroup(false)} title="Rename Group">
+        <Modal
+          isOpen={isEditingGroup}
+          onClose={() => setIsEditingGroup(false)}
+          title="Rename Group"
+          footer={
+            <div className="flex flex-col-reverse gap-3 sm:flex-row">
+              <button
+                type="button"
+                onClick={() => setIsEditingGroup(false)}
+                className="min-h-11 flex-1 rounded-xl border border-border bg-surface px-4 py-3 font-bold text-tx-secondary hover:bg-surface-hover"
+              >
+                Cancel
+              </button>
+              <button
+                type="button"
+                onClick={handleSaveGroupName}
+                disabled={!groupNameInput.trim()}
+                className="min-h-11 flex-1 rounded-xl bg-primary px-4 py-3 font-bold text-white hover:bg-primary-hover disabled:cursor-not-allowed disabled:opacity-50"
+              >
+                Save
+              </button>
+            </div>
+          }
+        >
           <div className="space-y-4">
             <div>
               <label className="block text-sm font-bold text-tx-secondary mb-2">Current name:</label>
@@ -275,21 +337,6 @@ export default function Words() {
                 autoFocus
                 onKeyDown={(e) => e.key === 'Enter' && handleSaveGroupName()}
               />
-            </div>
-            <div className="flex gap-3 pt-2">
-              <button
-                onClick={() => setIsEditingGroup(false)}
-                className="flex-1 px-4 py-3 bg-surface text-tx-secondary font-bold rounded-xl border border-border active:bg-bg"
-              >
-                Cancel
-              </button>
-              <button
-                onClick={handleSaveGroupName}
-                disabled={!groupNameInput.trim()}
-                className="flex-1 px-4 py-3 bg-primary text-white font-bold rounded-xl disabled:opacity-50 active:bg-primary-hover"
-              >
-                Save
-              </button>
             </div>
           </div>
         </Modal>
@@ -383,38 +430,26 @@ export default function Words() {
               </div>
               
               <div className="flex items-center space-x-1 sm:opacity-0 group-hover:opacity-100 transition-opacity">
-                {deleteConfirmId === word.id ? (
-                  <div className="flex items-center bg-danger-bg rounded-xl p-1">
-                    <span className="text-xs text-danger-tx font-bold px-2">Sure?</span>
-                    <button onClick={() => handleDeleteWord(word.id)} className="p-2 text-danger-tx hover:bg-danger-bg rounded-lg">
-                      <Check size={18} />
-                    </button>
-                    <button onClick={() => setDeleteConfirmId(null)} className="p-2 text-tx-secondary hover:bg-surface-hover rounded-lg">
-                      <X size={18} />
-                    </button>
-                  </div>
-                ) : (
-                  <>
-                    <button
-                      onClick={() => {
-                        setEditingId(word.id);
-                        setEnInput(word.english);
-                        setTrInput(word.turkish);
-                        setIsAdding(false);
-                        window.scrollTo({ top: 0, behavior: 'smooth' });
-                      }}
-                      className="p-2.5 text-tx-muted hover:text-primary hover:bg-primary-soft rounded-xl transition-colors"
-                    >
-                      <Edit2 size={18} />
-                    </button>
-                    <button
-                      onClick={() => setDeleteConfirmId(word.id)}
-                      className="p-2.5 text-tx-muted hover:text-danger-tx hover:bg-danger-bg rounded-xl transition-colors"
-                    >
-                      <Trash2 size={18} />
-                    </button>
-                  </>
-                )}
+                <button
+                  onClick={() => {
+                    setEditingId(word.id);
+                    setEnInput(word.english);
+                    setTrInput(word.turkish);
+                    setIsAdding(false);
+                    window.scrollTo({ top: 0, behavior: 'smooth' });
+                  }}
+                  className="p-2.5 text-tx-muted hover:text-primary hover:bg-primary-soft rounded-xl transition-colors"
+                  aria-label={`Edit ${word.english}`}
+                >
+                  <Edit2 size={18} />
+                </button>
+                <button
+                  onClick={() => setDeleteConfirmId(word.id)}
+                  className="p-2.5 text-tx-muted hover:text-danger-tx hover:bg-danger-bg rounded-xl transition-colors"
+                  aria-label={`Delete ${word.english}`}
+                >
+                  <Trash2 size={18} />
+                </button>
               </div>
             </div>
           ))}
@@ -425,6 +460,34 @@ export default function Words() {
             </div>
           )}
         </div>
+
+        <ConfirmDialog
+          isOpen={!!deleteGroupConfirmId}
+          onClose={() => setDeleteGroupConfirmId(null)}
+          onConfirm={() => {
+            if (deleteGroupConfirmId) return handleDeleteGroup(deleteGroupConfirmId);
+          }}
+          title="Delete Group?"
+          description={`This will permanently delete “${selectedGroup.name}” and all ${groupWords.length} words in it.`}
+          confirmLabel="Delete Group"
+          isPending={isDeleting}
+          danger
+        />
+
+        <ConfirmDialog
+          isOpen={!!deleteConfirmId}
+          onClose={() => setDeleteConfirmId(null)}
+          onConfirm={() => {
+            if (deleteConfirmId) return handleDeleteWord(deleteConfirmId);
+          }}
+          title="Delete Word?"
+          description={`This will permanently delete “${words?.find(word => word.id === deleteConfirmId)?.english || 'this word'}”.`}
+          confirmLabel="Delete Word"
+          isPending={isDeleting}
+          danger
+        />
+
+        {warningModal}
       </div>
     );
   }
@@ -473,12 +536,9 @@ export default function Words() {
           <div className="flex items-center justify-between mb-4">
             <h3 className="font-bold text-primary text-lg">Merge Imports</h3>
             <button
-              onClick={() => {
-                setIsMerging(false);
-                setSelectedGroupIds(new Set());
-                setMergeNameInput('');
-              }}
+              onClick={cancelMerge}
               className="p-2 bg-surface text-tx-secondary rounded-lg hover:bg-surface-hover"
+              aria-label="Cancel merge"
             >
               <X size={20} />
             </button>
@@ -537,7 +597,10 @@ export default function Words() {
               {!isMerging && (
                 <div className="flex items-center gap-2">
                   <button
-                    onClick={() => setSelectedGroupId(group.id)}
+                    onClick={() => {
+                      setSelectedGroupId(group.id);
+                      navigate(`/words?groupId=${encodeURIComponent(group.id)}`, { replace: true });
+                    }}
                     className="flex-1 sm:flex-none flex items-center justify-center space-x-1 px-5 py-2.5 bg-surface-hover text-tx-secondary rounded-xl font-bold btn-primary hover:bg-border"
                   >
                     View
@@ -562,20 +625,7 @@ export default function Words() {
         )}
       </div>
 
-      <Modal isOpen={!!alertMessage} onClose={() => setAlertMessage(null)} title="Warning">
-        <div className="space-y-4 text-center">
-          <div className="w-16 h-16 bg-warning-bg text-warning-tx rounded-full flex items-center justify-center mx-auto mb-4">
-            <AlertTriangle size={32} />
-          </div>
-          <p className="text-tx font-medium">{alertMessage}</p>
-          <button
-            onClick={() => setAlertMessage(null)}
-            className="w-full mt-4 px-4 py-3 bg-surface text-tx-secondary font-bold rounded-xl border border-border active:bg-bg"
-          >
-            Close
-          </button>
-        </div>
-      </Modal>
+      {warningModal}
     </div>
   );
 }

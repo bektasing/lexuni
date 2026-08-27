@@ -21,7 +21,7 @@ function Sidebar() {
   ];
 
   return (
-    <aside className="hidden sm:flex flex-col w-64 h-screen border-r border-border bg-surface fixed top-0 left-0 pt-8 px-4">
+    <aside className="hidden sm:flex flex-col w-64 h-screen border-r border-border bg-nav-bg fixed top-0 left-0 pt-8 px-4">
       <div className="mb-10 px-4">
         <h1 className="text-2xl font-bold tracking-tight text-tx">Lexuni</h1>
       </div>

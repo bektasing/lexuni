@@ -6,12 +6,12 @@ import Modal from '../components/Modal';
 import { useRef } from 'react';
 
 const THEMES = [
-  { id: 'arctic', name: 'Arctic', icon: Snowflake, description: 'Clean & crisp', preview: { bg: '#f8fafc', accent: '#2563eb' } },
-  { id: 'midnight', name: 'Midnight', icon: Moon, description: 'Deep navy', preview: { bg: '#0f172a', accent: '#38bdf8' } },
+  { id: 'arctic', name: 'Arctic', icon: Snowflake, description: 'Clean & crisp', preview: { bg: '#e0f2fe', accent: '#0284c7' } },
+  { id: 'midnight', name: 'Midnight', icon: Moon, description: 'Deep navy', preview: { bg: '#020617', accent: '#0ea5e9' } },
   { id: 'developer', name: 'Developer', icon: Terminal, description: 'Editor inspired', preview: { bg: '#181818', accent: '#61D9E8' } },
-  { id: 'lingo', name: 'Lingo', icon: MessageCircle, description: 'Bright & playful', preview: { bg: '#f9fafb', accent: '#58cc02' } },
-  { id: 'battery', name: 'Battery', icon: Battery, description: 'OLED dark', preview: { bg: '#000000', accent: '#9ca3af' } },
-  { id: 'sunset', name: 'Sunset', icon: Sun, description: 'Warm & bold', preview: { bg: '#faf0e6', accent: '#d9534f' } },
+  { id: 'lingo', name: 'Lingo', icon: MessageCircle, description: 'Bright & playful', preview: { bg: '#f0fdf4', accent: '#22c55e' } },
+  { id: 'battery', name: 'Battery', icon: Battery, description: 'OLED dark', preview: { bg: '#000000', accent: '#4ade80' } },
+  { id: 'sunset', name: 'Sunset', icon: Sun, description: 'Warm & bold', preview: { bg: '#fff7ed', accent: '#ea580c' } },
 ];
 
 
@@ -42,6 +42,8 @@ export default function Settings() {
   const fileInputRef = useRef<HTMLInputElement>(null);
   const [restorePreview, setRestorePreview] = useState<any>(null);
   const [restoreError, setRestoreError] = useState<string | null>(null);
+  const [isRestoring, setIsRestoring] = useState(false);
+  const [restoreSuccess, setRestoreSuccess] = useState(false);
   const [isThemeExpanded, setIsThemeExpanded] = useState(false);
 
   const handleExportBackup = async () => {
@@ -86,6 +88,10 @@ export default function Settings() {
     const file = e.target.files?.[0];
     if (!file) return;
 
+    setRestorePreview(null);
+    setRestoreError(null);
+    setRestoreSuccess(false);
+
     const reader = new FileReader();
     reader.onload = (event) => {
       try {
@@ -116,7 +122,7 @@ export default function Settings() {
           sessionsActive: json.data.sessions?.filter((s: any) => s.status === 'active').length || 0,
           theme: json.data.preferences?.theme || 'light'
         });
-      } catch (err) {
+      } catch {
         setRestoreError("This file is corrupted or not valid JSON.");
       }
     };
@@ -125,7 +131,8 @@ export default function Settings() {
   };
 
   const handleConfirmRestore = async () => {
-    if (!restorePreview) return;
+    if (!restorePreview || isRestoring) return;
+    setIsRestoring(true);
     const backup = restorePreview.backup;
     
     try {
@@ -146,9 +153,12 @@ export default function Settings() {
       }
       
       setRestorePreview(null);
-    } catch (e) {
-      setRestoreError("Failed to restore data. Existing data was kept intact.");
+      setRestoreSuccess(true);
+    } catch {
+      setRestoreError("Could not restore this backup. Your current data was not changed.");
       setRestorePreview(null);
+    } finally {
+      setIsRestoring(false);
     }
   };
 
@@ -302,65 +312,108 @@ export default function Settings() {
         </div>
       </section>
 
-      <Modal isOpen={!!restoreError} onClose={() => setRestoreError(null)} title="Invalid Backup">
+      <Modal
+        isOpen={!!restoreError}
+        onClose={() => setRestoreError(null)}
+        title="Restore Error"
+        footer={
+          <button
+            type="button"
+            onClick={() => setRestoreError(null)}
+            className="min-h-11 w-full rounded-xl bg-primary px-4 py-3 font-bold text-white hover:bg-primary-hover"
+          >
+            Done
+          </button>
+        }
+      >
         <div className="space-y-4 text-center">
-          <div className="w-16 h-16 bg-danger-bg text-danger-tx rounded-full flex items-center justify-center mx-auto mb-4">
-            <AlertTriangle size={32} />
+          <div className="mx-auto mb-4 flex size-16 items-center justify-center rounded-full bg-danger-bg text-danger-tx">
+            <AlertTriangle size={32} aria-hidden="true" />
           </div>
           <p className="text-tx font-medium">{restoreError}</p>
-          <button
-            onClick={() => setRestoreError(null)}
-            className="w-full mt-4 px-4 py-3 bg-surface text-tx-secondary font-bold rounded-xl border border-border btn-primary"
-          >
-            Close
-          </button>
         </div>
       </Modal>
 
-      <Modal isOpen={!!restorePreview} onClose={() => setRestorePreview(null)} title="Restore Lexuni Backup?">
-        {restorePreview && (
-          <div className="space-y-5">
-            <div>
-              <p className="text-tx-secondary font-medium text-sm">Backup created:</p>
-              <p className="text-tx font-bold">{new Date(restorePreview.date).toLocaleString(undefined, { month: 'short', day: 'numeric', year: 'numeric', hour: '2-digit', minute: '2-digit' })}</p>
-            </div>
-            
-            <div>
-              <p className="text-tx-secondary font-medium text-sm mb-2">Contains:</p>
-              <ul className="list-disc list-inside space-y-1 text-tx font-medium">
-                <li>{restorePreview.words} words</li>
-                <li>{restorePreview.groups} import groups</li>
-                <li>{restorePreview.sessionsCompleted} completed sessions</li>
-                {restorePreview.sessionsActive > 0 && (
-                  <li className="text-primary">{restorePreview.sessionsActive} active session</li>
-                )}
-                <li>Theme: <span className="capitalize">{restorePreview.theme}</span></li>
-              </ul>
-            </div>
-
-            <div className="bg-danger-bg p-4 rounded-xl border border-danger-border">
-              <p className="text-danger-tx font-bold text-sm">Warning:</p>
-              <p className="text-danger-tx font-medium text-sm mt-1">
-                Restoring this backup will permanently replace all current Lexuni data on this device.
-              </p>
-            </div>
-
-            <div className="flex gap-3 pt-2">
-              <button
-                onClick={() => setRestorePreview(null)}
-                className="flex-1 px-4 py-3 bg-surface text-tx-secondary font-bold rounded-xl border border-border active:bg-bg"
-              >
-                Cancel
-              </button>
-              <button
-                onClick={handleConfirmRestore}
-                className="flex-1 px-4 py-3 bg-danger-btn text-white font-bold rounded-xl active:bg-danger-btn-hover shadow-sm"
-              >
-                Restore Backup
-              </button>
-            </div>
+      <Modal
+        isOpen={!!restorePreview}
+        onClose={() => { if (!isRestoring) setRestorePreview(null); }}
+        title="Restore Lexuni Backup?"
+        dismissible={!isRestoring}
+        footer={
+          <div className="flex flex-col-reverse gap-3 sm:flex-row">
+            <button
+              type="button"
+              onClick={() => setRestorePreview(null)}
+              disabled={isRestoring}
+              autoFocus
+              className="min-h-11 flex-1 rounded-xl border border-border bg-surface px-4 py-3 font-bold text-tx-secondary transition-colors hover:bg-surface-hover disabled:cursor-not-allowed disabled:opacity-50"
+            >
+              Cancel
+            </button>
+            <button
+              type="button"
+              onClick={handleConfirmRestore}
+              disabled={isRestoring}
+              className="min-h-11 flex-1 rounded-xl bg-danger-btn px-4 py-3 font-bold text-white shadow-sm transition-colors hover:bg-danger-btn-hover disabled:cursor-not-allowed disabled:opacity-50"
+            >
+              {isRestoring ? 'Restoring…' : 'Restore Backup'}
+            </button>
           </div>
-        )}
+        }
+      >
+        <div className="space-y-5">
+          <div>
+            <p className="text-sm font-medium text-tx-secondary">Backup created:</p>
+            <p className="break-words font-bold text-tx">
+              {restorePreview?.date
+                ? new Date(restorePreview.date).toLocaleString(undefined, { month: 'short', day: 'numeric', year: 'numeric', hour: '2-digit', minute: '2-digit' })
+                : 'Unknown date'}
+            </p>
+          </div>
+
+          <div>
+            <p className="mb-2 text-sm font-medium text-tx-secondary">Contains:</p>
+            <ul className="list-inside list-disc space-y-1 font-medium text-tx">
+              <li>{restorePreview?.words ?? 0} words</li>
+              <li>{restorePreview?.groups ?? 0} import groups</li>
+              <li>{restorePreview?.sessionsCompleted ?? 0} completed sessions</li>
+              {(restorePreview?.sessionsActive ?? 0) > 0 ? (
+                <li className="text-primary">{restorePreview?.sessionsActive} active session</li>
+              ) : null}
+              <li>Theme: <span className="capitalize">{restorePreview?.theme || 'default'}</span></li>
+            </ul>
+          </div>
+
+          <div className="rounded-xl border border-danger-border bg-danger-bg p-4">
+            <p className="text-sm font-bold text-danger-tx">Warning:</p>
+            <p className="mt-1 text-sm font-medium text-danger-tx">
+              Restoring this backup will permanently replace all current Lexuni data on this device.
+            </p>
+          </div>
+        </div>
+      </Modal>
+
+      <Modal
+        isOpen={restoreSuccess}
+        onClose={() => setRestoreSuccess(false)}
+        title="Restore Complete"
+        footer={
+          <button
+            type="button"
+            onClick={() => setRestoreSuccess(false)}
+            className="min-h-11 w-full rounded-xl bg-primary px-4 py-3 font-bold text-white transition-colors hover:bg-primary-hover"
+          >
+            Done
+          </button>
+        }
+      >
+        <div className="py-2 text-center">
+          <div className="mx-auto mb-4 flex size-16 items-center justify-center rounded-full bg-success-bg text-success-tx">
+            <Check size={32} strokeWidth={3} aria-hidden="true" />
+          </div>
+          <p className="mb-2 text-lg font-bold text-tx">Backup restored successfully.</p>
+          <p className="text-sm text-tx-secondary">Your vocabulary, groups, and sessions have been updated.</p>
+        </div>
       </Modal>
     </div>
   );

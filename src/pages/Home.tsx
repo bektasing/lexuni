@@ -2,9 +2,13 @@ import { useLiveQuery } from 'dexie-react-hooks';
 import { db } from '../db/db';
 import { useNavigate } from 'react-router-dom';
 import { Play, Import, BookOpen } from 'lucide-react';
+import { useState } from 'react';
+import ConfirmDialog from '../components/ConfirmDialog';
 
 export default function Home() {
   const navigate = useNavigate();
+  const [finishConfirmOpen, setFinishConfirmOpen] = useState(false);
+  const [isFinishing, setIsFinishing] = useState(false);
   const words = useLiveQuery(() => db.words.toArray());
   const groupsCount = useLiveQuery(() => db.groups.count());
   const sessions = useLiveQuery(() => db.sessions.where('status').equals('finished').toArray());
@@ -47,6 +51,26 @@ export default function Home() {
 
   const canPractice = totalWords >= 4;
 
+  const handleFinishSession = async () => {
+    if (!activeSession || isFinishing) return;
+    setIsFinishing(true);
+    try {
+      await db.sessions.update(activeSession.id, {
+        status: 'finished',
+        finishedAt: new Date().toISOString(),
+        currentWordId: undefined,
+        currentOptions: undefined,
+        currentDirection: undefined,
+        questionQueue: [],
+        reinforcementQueue: []
+      });
+      setFinishConfirmOpen(false);
+      navigate(`/session/${activeSession.id}`);
+    } finally {
+      setIsFinishing(false);
+    }
+  };
+
   return (
     <div className="p-6 pt-12 sm:pt-16 pb-24 max-w-2xl mx-auto page-enter">
       <header className="mb-10 text-center sm:text-left">
@@ -84,23 +108,23 @@ export default function Home() {
         </div>
 
         {activeSession ? (
-          <div className="mb-8 p-5 bg-warning-bg border border-amber-200 rounded-2xl shadow-sm hover-card tap-card">
+          <div className="mb-8 p-5 bg-session-bg border border-session-border rounded-2xl shadow-sm hover-card tap-card">
             <div className="flex items-center justify-between mb-4">
               <div>
-                <div className="text-xs font-bold text-warning-tx uppercase tracking-widest mb-1 flex items-center space-x-1">
+                <div className="text-xs font-bold text-session-muted uppercase tracking-widest mb-1 flex items-center space-x-1">
                   <span className="relative flex h-2 w-2 mr-1">
-                    <span className="animate-ping absolute inline-flex h-full w-full rounded-full bg-amber-400 opacity-75"></span>
-                    <span className="relative inline-flex rounded-full h-2 w-2 bg-amber-500"></span>
+                    <span className="animate-ping absolute inline-flex h-full w-full rounded-full bg-session-accent opacity-75"></span>
+                    <span className="relative inline-flex rounded-full h-2 w-2 bg-session-accent"></span>
                   </span>
                   Session in progress
                 </div>
-                <div className="font-bold text-amber-900 text-lg">
+                <div className="font-bold text-session-tx text-lg">
                   {activeSession.sourceType === 'all' ? 'All Words' : activeSession.groupName || 'Practice'}
                 </div>
               </div>
               <div className="text-right">
-                <div className="font-black text-warning-tx text-xl">{activeSession.totalAnswered} ans</div>
-                <div className="text-sm font-semibold text-warning-tx">
+                <div className="font-black text-session-accent text-xl">{activeSession.totalAnswered} ans</div>
+                <div className="text-sm font-semibold text-session-muted">
                   {activeSession.totalAnswered > 0 ? Math.round((activeSession.correctCount / activeSession.totalAnswered) * 100) : 0}% acc
                 </div>
               </div>
@@ -108,16 +132,13 @@ export default function Home() {
             <div className="grid grid-cols-2 gap-3">
               <button 
                 onClick={() => navigate('/practice')}
-                className="py-3 bg-warning-tx text-white font-bold rounded-xl btn-primary hover:shadow-md"
+                className="py-3 bg-session-btn text-session-btn-tx font-bold rounded-xl btn-primary hover:shadow-md opacity-95 hover:opacity-100 transition-opacity"
               >
                 Continue
               </button>
               <button 
-                onClick={async () => {
-                  await db.sessions.update(activeSession.id, { status: 'finished', finishedAt: new Date().toISOString() });
-                  navigate(`/session/${activeSession.id}`);
-                }}
-                className="py-3 bg-surface text-warning-tx border border-amber-200 font-bold rounded-xl btn-primary hover:bg-amber-50"
+                onClick={() => setFinishConfirmOpen(true)}
+                className="py-3 bg-session-btn-sec text-session-btn-sec-tx border border-session-border font-bold rounded-xl btn-primary hover:opacity-80 transition-opacity"
               >
                 Finish
               </button>
@@ -185,6 +206,16 @@ export default function Home() {
           </div>
         </div>
       </div>
+
+      <ConfirmDialog
+        isOpen={finishConfirmOpen}
+        onClose={() => setFinishConfirmOpen(false)}
+        onConfirm={handleFinishSession}
+        title="Finish Session?"
+        description="Your progress so far will be saved to history and this practice session will end."
+        confirmLabel="Finish Session"
+        isPending={isFinishing}
+      />
     </div>
   );
 }

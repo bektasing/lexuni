@@ -24,7 +24,7 @@ export default function Navigation() {
 
 
   return (
-    <nav className="fixed bottom-0 left-0 right-0 bg-surface/95 backdrop-blur-md border-t border-border pb-safe shadow-[0_-2px_10px_rgba(0,0,0,0.02)] z-50 sm:hidden">
+    <nav className="fixed bottom-0 left-0 right-0 bg-nav-bg/95 backdrop-blur-md border-t border-border pb-safe shadow-[0_-2px_10px_rgba(0,0,0,0.02)] z-50 sm:hidden">
       <div className="relative flex justify-around items-center h-[4.5rem]">
         <div 
           className="absolute top-1/2 -translate-y-1/2 h-14 w-1/5 motion-safe:transition-all motion-safe:duration-200 motion-safe:ease-out pointer-events-none flex items-center justify-center"

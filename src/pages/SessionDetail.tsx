@@ -1,8 +1,9 @@
 import { useLiveQuery } from 'dexie-react-hooks';
 import { db } from '../db/db';
 import { useParams, useNavigate } from 'react-router-dom';
-import { ChevronLeft, Trash2, Check, X } from 'lucide-react';
+import { ChevronLeft, Trash2 } from 'lucide-react';
 import { useState } from 'react';
+import ConfirmDialog from '../components/ConfirmDialog';
 
 export default function SessionDetail() {
   const { id } = useParams<{ id: string }>();
@@ -12,6 +13,7 @@ export default function SessionDetail() {
   const answers = useLiveQuery(() => id ? db.sessionAnswers.where({ sessionId: id }).toArray() : [], [id]);
 
   const [deleteConfirm, setDeleteConfirm] = useState(false);
+  const [isDeleting, setIsDeleting] = useState(false);
 
   if (!id) return null;
   if (session === undefined || answers === undefined) return null; // loading
@@ -24,9 +26,18 @@ export default function SessionDetail() {
   }
 
   const handleDelete = async () => {
-    await db.sessionAnswers.where({ sessionId: id }).delete();
-    await db.sessions.delete(id);
-    navigate('/history');
+    if (isDeleting) return;
+    setIsDeleting(true);
+    try {
+      await db.transaction('rw', db.sessionAnswers, db.sessions, async () => {
+        await db.sessionAnswers.where({ sessionId: id }).delete();
+        await db.sessions.delete(id);
+      });
+      setDeleteConfirm(false);
+      navigate('/history');
+    } finally {
+      setIsDeleting(false);
+    }
   };
 
   const accuracy = session.totalAnswered > 0 
@@ -38,7 +49,7 @@ export default function SessionDetail() {
   return (
     <div className="p-4 sm:p-6 pb-24 max-w-2xl mx-auto page-enter">
       <header className="mb-8 flex items-center justify-between">
-        <button 
+        <button
           onClick={() => navigate('/history')}
           className="flex items-center space-x-1 text-tx-secondary hover:text-tx font-medium"
         >
@@ -46,24 +57,13 @@ export default function SessionDetail() {
           <span>History</span>
         </button>
         
-        {deleteConfirm ? (
-          <div className="flex items-center bg-danger-bg rounded-xl p-1">
-            <span className="text-xs text-danger-tx font-bold px-2">Sure?</span>
-            <button onClick={handleDelete} className="p-2 text-danger-tx hover:bg-danger-bg rounded-lg">
-              <Check size={18} />
-            </button>
-            <button onClick={() => setDeleteConfirm(false)} className="p-2 text-tx-secondary hover:bg-surface-hover rounded-lg">
-              <X size={18} />
-            </button>
-          </div>
-        ) : (
-          <button 
-            onClick={() => setDeleteConfirm(true)}
-            className="p-2 text-tx-muted hover:text-danger-tx hover:bg-danger-bg rounded-xl transition-colors"
-          >
-            <Trash2 size={20} />
-          </button>
-        )}
+        <button
+          onClick={() => setDeleteConfirm(true)}
+          className="p-2 text-tx-muted hover:text-danger-tx hover:bg-danger-bg rounded-xl transition-colors"
+          aria-label="Delete session"
+        >
+          <Trash2 size={20} />
+        </button>
       </header>
 
       <div className="text-center mb-10">
@@ -131,6 +131,17 @@ export default function SessionDetail() {
           </div>
         )}
       </div>
+
+      <ConfirmDialog
+        isOpen={deleteConfirm}
+        onClose={() => setDeleteConfirm(false)}
+        onConfirm={handleDelete}
+        title="Delete Session?"
+        description="This session and all of its recorded answers will be permanently removed from history."
+        confirmLabel="Delete Session"
+        isPending={isDeleting}
+        danger
+      />
     </div>
   );
 }

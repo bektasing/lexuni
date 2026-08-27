@@ -140,14 +140,14 @@ npm run preview
 
 ### Theme Architecture
 Lexuni supports 6 highly distinct themes using a strict CSS variable semantic token system (`index.css`):
-1. **Arctic (Default)** - Clean neutral light theme, airy spacing, crisp white surfaces, strong blue accent.
-2. **Midnight** - Premium dark mode, deep navy background, cool blue/cyan accent.
-3. **Developer** - Code-editor inspired, charcoal background, lime/cyan accent, slightly squared corners.
-4. **Lingo** - Energetic language-learning feel, highly rounded corners, strong friendly shadows, bright green accent.
-5. **Battery** - OLED-friendly ultra dark, true black background, high-contrast borders, minimal shadows.
-6. **Sunset** - Heavy warm earthy theme, sand background, deep cream cards, terracotta/burnt-orange accent.
+1. **Arctic (Default)** - Icy blue. Pale icy background, cool blue accents, crisp identity.
+2. **Midnight** - Deep navy. Rich atmospheric dark blue, cyan accents.
+3. **Developer** - Code editor charcoal. Charcoal surfaces, cyan accents, syntax-inspired details.
+4. **Lingo** - Green energetic. Pale green background, bold vibrant green accents, fresh and playful.
+5. **Battery** - OLED black. True black background, restrained muted green accent, dark cards.
+6. **Sunset** - Terracotta warm. Warm sand/peach background, beige/clay cards, burnt orange accent.
 
-Each theme guarantees readability by redefining colors like `--bg`, `--surface`, `--tx`, `--primary`, and `--nav-active`. Semantic learning feedback colors (`--success-*`, `--danger-*`) remain globally consistent across all themes to preserve learning integrity.
+Each theme guarantees readability by redefining colors like `--bg`, `--surface`, `--tx`, `--primary`, and `--nav-active`. Semantic learning feedback colors (`--success-*`, `--danger-*`) remain globally consistent across all themes to preserve learning integrity. Special highly-visible components like the Home screen "Session in Progress" panel use dedicated semantic tokens (e.g., `--session-bg`, `--session-btn`) to maintain theme-native visual hierarchy.
 
 ### Static Palette Previews
 In `Settings.tsx`, each theme defines static `preview` colors (`{ bg, accent }`). These render as clean, 2-color mini UI chips alongside a simple Lucide icon, completely replacing the old messy multi-dot palettes. Persisted preferences from legacy themes (Ocean, Forest, Violet) safely auto-migrate to Arctic on startup.

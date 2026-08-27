@@ -17,6 +17,8 @@ export default function ImportPage() {
   const [groupName, setGroupName] = useState<string>('');
   const [copied, setCopied] = useState(false);
   const [importSuccess, setImportSuccess] = useState<{ count: number, duplicates: number, groupName: string, groupId: string } | null>(null);
+  const [importError, setImportError] = useState<string | null>(null);
+  const [isImporting, setIsImporting] = useState(false);
   const navigate = useNavigate();
 
   const handlePreview = async () => {
@@ -72,37 +74,56 @@ export default function ImportPage() {
   };
 
   const handleImport = async () => {
-    if (!preview) return;
+    if (!preview || isImporting) return;
     const validWords = preview.filter(p => p.status === 'valid');
     if (validWords.length === 0) return;
 
     const groupId = crypto.randomUUID();
-    
-    await db.groups.add({
-      id: groupId,
-      name: groupName,
-      createdAt: new Date().toISOString()
-    });
+    const safeGroupName = groupName.trim() || 'Imported Words';
+    setIsImporting(true);
+    setImportError(null);
 
-    const newEntries = validWords.map(w => ({
-      id: crypto.randomUUID(),
-      groupId,
-      english: w.english,
-      turkish: w.turkish,
-      createdAt: new Date().toISOString(),
-      correctCount: 0,
-      wrongCount: 0
-    }));
+    try {
+      const createdAt = new Date().toISOString();
+      const newEntries = validWords.map(w => ({
+        id: crypto.randomUUID(),
+        groupId,
+        english: w.english,
+        turkish: w.turkish,
+        createdAt,
+        correctCount: 0,
+        wrongCount: 0
+      }));
 
-    await db.words.bulkAdd(newEntries);
-    setInput('');
-    setPreview(null);
-    setImportSuccess({
-      count: validWords.length,
-      duplicates: preview.filter(p => p.status === 'duplicate').length,
-      groupName: groupName,
-      groupId: groupId
-    });
+      await db.transaction('rw', db.groups, db.words, async () => {
+        await db.groups.add({ id: groupId, name: safeGroupName, createdAt });
+        await db.words.bulkAdd(newEntries);
+      });
+
+      const result = {
+        count: validWords.length,
+        duplicates: preview.filter(p => p.status === 'duplicate').length,
+        groupName: safeGroupName,
+        groupId
+      };
+
+      setInput('');
+      setPreview(null);
+      setImportSuccess(result);
+    } catch {
+      setImportSuccess(null);
+      setImportError('The words could not be imported. Your existing vocabulary was not changed. Please try again.');
+    } finally {
+      setIsImporting(false);
+    }
+  };
+
+  const closeImportSuccess = () => setImportSuccess(null);
+
+  const viewImportedGroup = () => {
+    const groupId = importSuccess?.groupId;
+    setImportSuccess(null);
+    navigate(groupId ? `/words?groupId=${encodeURIComponent(groupId)}` : '/words');
   };
 
   const copyPrompt = () => {
@@ -240,9 +261,10 @@ Rules:
           {validCount > 0 && (
             <button
               onClick={handleImport}
-              className="w-full bg-primary text-white py-4 rounded-2xl font-bold text-lg btn-primary shadow-lg"
+              disabled={isImporting}
+              className="w-full bg-primary text-white py-4 rounded-2xl font-bold text-lg btn-primary shadow-lg disabled:cursor-not-allowed disabled:opacity-50"
             >
-              Import {validCount} {validCount === 1 ? 'Word' : 'Words'}
+              {isImporting ? 'Importing…' : `Import ${validCount} ${validCount === 1 ? 'Word' : 'Words'}`}
             </button>
           )}
         </div>
@@ -250,39 +272,63 @@ Rules:
 
       <Modal 
         isOpen={!!importSuccess} 
-        onClose={() => setImportSuccess(null)} 
+        onClose={closeImportSuccess}
         title="Import Complete"
-      >
-        {importSuccess && (
-          <div className="space-y-4">
-            <div className="text-center py-4">
-              <div className="w-16 h-16 bg-success-bg text-success-tx rounded-full flex items-center justify-center mx-auto mb-4">
-                <CheckCircle2 size={32} />
-              </div>
-              <h3 className="text-2xl font-bold text-tx mb-2">{importSuccess.count} words added</h3>
-              <p className="text-tx-secondary font-medium mb-1">{importSuccess.groupName}</p>
-              {importSuccess.duplicates > 0 && (
-                <p className="text-tx-muted text-sm mt-2">{importSuccess.duplicates} duplicates skipped</p>
-              )}
-            </div>
-            <div className="flex gap-3 pt-2">
-              <button
-                onClick={() => setImportSuccess(null)}
-                className="flex-1 px-4 py-3 bg-surface text-tx-secondary font-bold rounded-xl border border-border active:bg-bg"
-              >
-                Done
-              </button>
-              <button
-                onClick={() => {
-                  navigate(`/words`);
-                }}
-                className="flex-1 px-4 py-3 bg-primary text-white font-bold rounded-xl active:bg-primary-hover"
-              >
-                View Group
-              </button>
-            </div>
+        footer={
+          <div className="flex flex-col gap-3 sm:flex-row">
+            <button
+              type="button"
+              onClick={viewImportedGroup}
+              className="min-h-11 flex-1 rounded-xl border border-border bg-surface px-4 py-3 font-bold text-tx-secondary transition-colors hover:bg-surface-hover"
+            >
+              View Group
+            </button>
+            <button
+              type="button"
+              onClick={closeImportSuccess}
+              className="min-h-11 flex-1 rounded-xl bg-primary px-4 py-3 font-bold text-white transition-colors hover:bg-primary-hover"
+            >
+              Done
+            </button>
           </div>
-        )}
+        }
+      >
+        <div className="py-2 text-center">
+          <div className="mx-auto mb-4 flex size-16 items-center justify-center rounded-full bg-success-bg text-success-tx">
+            <CheckCircle2 size={32} aria-hidden="true" />
+          </div>
+          <h3 className="mb-2 text-2xl font-bold text-tx">
+            {importSuccess?.count ?? 0} {(importSuccess?.count ?? 0) === 1 ? 'word' : 'words'} added
+          </h3>
+          {importSuccess?.groupName ? (
+            <p className="mb-1 break-words font-medium text-tx-secondary">{importSuccess.groupName}</p>
+          ) : null}
+          {(importSuccess?.duplicates ?? 0) > 0 ? (
+            <p className="mt-2 text-sm text-tx-muted">{importSuccess?.duplicates} duplicates skipped</p>
+          ) : null}
+        </div>
+      </Modal>
+
+      <Modal
+        isOpen={!!importError}
+        onClose={() => setImportError(null)}
+        title="Import Failed"
+        footer={
+          <button
+            type="button"
+            onClick={() => setImportError(null)}
+            className="min-h-11 w-full rounded-xl bg-primary px-4 py-3 font-bold text-white hover:bg-primary-hover"
+          >
+            Try Again
+          </button>
+        }
+      >
+        <div className="flex gap-4">
+          <div className="flex size-11 shrink-0 items-center justify-center rounded-2xl bg-danger-bg text-danger-tx">
+            <AlertCircle size={22} aria-hidden="true" />
+          </div>
+          <p className="self-center leading-relaxed text-tx-secondary">{importError}</p>
+        </div>
       </Modal>
     </div>
   );

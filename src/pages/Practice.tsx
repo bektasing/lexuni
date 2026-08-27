@@ -3,6 +3,7 @@ import { useLiveQuery } from 'dexie-react-hooks';
 import { db } from '../db/db';
 import { useNavigate, useSearchParams } from 'react-router-dom';
 import Modal from '../components/Modal';
+import ConfirmDialog from '../components/ConfirmDialog';
 import { X, Check, XCircle, Play, AlertTriangle } from 'lucide-react';
 import type { StudySession } from '../types';
 
@@ -20,6 +21,8 @@ export default function Practice() {
   const [searchParams] = useSearchParams();
   const [alertMessage, setAlertMessage] = useState<string | null>(null);
   const [isExiting, setIsExiting] = useState(false);
+  const [finishConfirmOpen, setFinishConfirmOpen] = useState(false);
+  const [isFinishing, setIsFinishing] = useState(false);
    const sourceParam = searchParams.get('source');
   const groupIdParam = searchParams.get('groupId');
   
@@ -228,17 +231,23 @@ export default function Practice() {
   };
 
   const finishSession = async () => {
-    if (!activeSession) return;
-    await db.sessions.update(activeSession.id, {
-      status: 'finished',
-      finishedAt: new Date().toISOString(),
-      currentWordId: undefined,
-      currentOptions: undefined,
-      currentDirection: undefined,
-      questionQueue: [],
-      reinforcementQueue: []
-    });
-    navigate(`/session/${activeSession.id}`);
+    if (!activeSession || isFinishing) return;
+    setIsFinishing(true);
+    try {
+      await db.sessions.update(activeSession.id, {
+        status: 'finished',
+        finishedAt: new Date().toISOString(),
+        currentWordId: undefined,
+        currentOptions: undefined,
+        currentDirection: undefined,
+        questionQueue: [],
+        reinforcementQueue: []
+      });
+      setFinishConfirmOpen(false);
+      navigate(`/session/${activeSession.id}`);
+    } finally {
+      setIsFinishing(false);
+    }
   };
 
   if (!words || !groups) return null;
@@ -274,7 +283,7 @@ export default function Practice() {
             <div className="text-primary">{accuracy}%</div>
           </div>
           <button 
-            onClick={finishSession}
+            onClick={() => setFinishConfirmOpen(true)}
             className="px-4 py-2 bg-surface-hover text-tx-secondary hover:bg-border font-bold text-sm btn-primary"
           >
             Finish
@@ -349,6 +358,15 @@ export default function Practice() {
           </div>
         </div>
         </main>
+        <ConfirmDialog
+          isOpen={finishConfirmOpen}
+          onClose={() => setFinishConfirmOpen(false)}
+          onConfirm={finishSession}
+          title="Finish Session?"
+          description="Your progress so far will be saved to history and this practice session will end."
+          confirmLabel="Finish Session"
+          isPending={isFinishing}
+        />
       </div>
     );
   }
@@ -416,21 +434,28 @@ export default function Practice() {
         <span>Start Session</span>
       </button>
 
-      <Modal isOpen={!!alertMessage} onClose={() => setAlertMessage(null)} title="Warning">
-        <div className="space-y-4 text-center">
-          <div className="w-16 h-16 bg-warning-bg text-warning-tx rounded-full flex items-center justify-center mx-auto mb-4">
-            <AlertTriangle size={32} />
-          </div>
-          <p className="text-tx font-medium">{alertMessage}</p>
+      <Modal
+        isOpen={!!alertMessage}
+        onClose={() => setAlertMessage(null)}
+        title="Warning"
+        footer={
           <button
+            type="button"
             onClick={() => {
               setAlertMessage(null);
               navigate('/');
             }}
-            className="w-full mt-4 px-4 py-3 bg-surface text-tx-secondary font-bold rounded-xl border border-border active:bg-bg"
+            className="min-h-11 w-full rounded-xl bg-primary px-4 py-3 font-bold text-white hover:bg-primary-hover"
           >
             Go Back
           </button>
+        }
+      >
+        <div className="flex gap-4">
+          <div className="flex size-11 shrink-0 items-center justify-center rounded-2xl bg-warning-bg text-warning-tx">
+            <AlertTriangle size={22} aria-hidden="true" />
+          </div>
+          <p className="self-center leading-relaxed text-tx-secondary">{alertMessage}</p>
         </div>
       </Modal>
     </div>

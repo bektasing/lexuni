@@ -1,18 +1,28 @@
 import { useLiveQuery } from 'dexie-react-hooks';
 import { db } from '../db/db';
 import { useNavigate } from 'react-router-dom';
-import { Clock, Trash2, Check, X, ChevronRight } from 'lucide-react';
+import { Clock, Trash2, ChevronRight } from 'lucide-react';
 import { useState } from 'react';
+import ConfirmDialog from '../components/ConfirmDialog';
 
 export default function History() {
   const navigate = useNavigate();
   const sessions = useLiveQuery(() => db.sessions.where('status').equals('finished').toArray());
   const [clearConfirm, setClearConfirm] = useState(false);
+  const [isClearing, setIsClearing] = useState(false);
 
   const handleClearAll = async () => {
-    await db.sessionAnswers.clear();
-    await db.sessions.clear();
-    setClearConfirm(false);
+    if (isClearing) return;
+    setIsClearing(true);
+    try {
+      await db.transaction('rw', db.sessionAnswers, db.sessions, async () => {
+        await db.sessionAnswers.clear();
+        await db.sessions.clear();
+      });
+      setClearConfirm(false);
+    } finally {
+      setIsClearing(false);
+    }
   };
 
   if (!sessions) return null;
@@ -28,25 +38,14 @@ export default function History() {
         </div>
         
         {sessions.length > 0 && (
-          clearConfirm ? (
-            <div className="flex items-center bg-danger-bg rounded-xl p-1">
-              <span className="text-xs text-danger-tx font-bold px-2">Clear All?</span>
-              <button onClick={handleClearAll} className="p-2 text-danger-tx hover:bg-danger-bg rounded-lg">
-                <Check size={18} />
-              </button>
-              <button onClick={() => setClearConfirm(false)} className="p-2 text-tx-secondary hover:bg-surface-hover rounded-lg">
-                <X size={18} />
-              </button>
-            </div>
-          ) : (
-            <button 
-              onClick={() => setClearConfirm(true)}
-              className="p-3 text-tx-muted hover:text-danger-tx hover:bg-danger-bg rounded-xl transition-colors border border-transparent hover:border-danger-border"
-              title="Clear All History"
-            >
-              <Trash2 size={20} />
-            </button>
-          )
+          <button
+            onClick={() => setClearConfirm(true)}
+            className="p-3 text-tx-muted hover:text-danger-tx hover:bg-danger-bg rounded-xl transition-colors border border-transparent hover:border-danger-border"
+            title="Clear All History"
+            aria-label="Clear all history"
+          >
+            <Trash2 size={20} />
+          </button>
         )}
       </header>
 
@@ -99,6 +98,17 @@ export default function History() {
           })}
         </div>
       )}
+
+      <ConfirmDialog
+        isOpen={clearConfirm}
+        onClose={() => setClearConfirm(false)}
+        onConfirm={handleClearAll}
+        title="Clear History?"
+        description="This will permanently delete every completed session and its answer history. Your words and groups will remain."
+        confirmLabel="Clear History"
+        isPending={isClearing}
+        danger
+      />
     </div>
   );
 }
