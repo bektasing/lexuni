@@ -117,7 +117,7 @@ npm run preview
 - List all words with search, sorting, and delete/edit.
 - Groups renaming via simple modal UI.
 - Practice mode with multiple-choice questions.
-- Home dashboard with statistics.
+- Typography-first Home overview with lightweight statistics and a dedicated active-session panel.
 - Export to `.txt` vocabulary backup file.
 - Full Manual JSON Backup & Restore (portable persistent sessions, queues, stats, preferences).
 - PWA installable.
@@ -135,6 +135,15 @@ npm run preview
 - Maintain IndexedDB backward compatibility where reasonable.
 - Update `PROJECT.md` when architecture or core behavior changes.
 
+
+## Visual System
+
+- Typography carries the primary hierarchy; surfaces support content instead of containing every section.
+- Cards are reserved for elevated, high-priority UI such as an active practice session and modals.
+- Semantic theme tokens continue to control page, navigation, interaction, status, and session colors across all six themes.
+- Groups, vocabulary, history, and settings use lightweight rows and separators rather than repeated bordered cards.
+- Practice intentionally strips the interface back to session stats, the current word, four answers, and strong feedback states.
+- Shared CSS primitives define buttons, fields, icon actions, page rhythm, list rows, and a compact radius scale.
 
 ## Theming and Motion (v3.1)
 
@@ -155,6 +164,6 @@ In `Settings.tsx`, each theme defines static `preview` colors (`{ bg, accent }`)
 ### Motion & Micro-Interactions
 The app utilizes lightweight, premium motion:
 - **Mobile Navigation**: A single shared, symmetrical indicator pill smoothly translates (`left` percentage interpolation) across the bottom navigation to follow the active tab, avoiding flicker.
-- **Micro-Interactions**: Global utility classes (`.hover-card`, `.tap-card`, `.btn-primary`) handle subtle `translateY` hover lifts and tap `scale(0.98)` interactions.
+- **Micro-Interactions**: Shared controls use quick, property-specific color transitions and subtle press feedback. Frequent list interactions remain quiet.
 - **Page Entrances**: A fast `.page-enter` animation fades and slides content up slightly when navigating major routes.
 - **Reduced Motion**: All animations strictly respect OS-level `prefers-reduced-motion: reduce` settings using Tailwind's `motion-safe:` modifier or simplified keyframe fallbacks.

@@ -24,13 +24,13 @@ export default function Navigation() {
 
 
   return (
-    <nav className="fixed bottom-0 left-0 right-0 bg-nav-bg/95 backdrop-blur-md border-t border-border pb-safe shadow-[0_-2px_10px_rgba(0,0,0,0.02)] z-50 sm:hidden">
-      <div className="relative flex justify-around items-center h-[4.5rem]">
+    <nav className="mobile-nav sm:hidden" aria-label="Primary navigation">
+      <div className="mobile-nav-inner">
         <div 
-          className="absolute top-1/2 -translate-y-1/2 h-14 w-1/5 motion-safe:transition-all motion-safe:duration-200 motion-safe:ease-out pointer-events-none flex items-center justify-center"
+          className="mobile-nav-indicator"
           style={{ left: `${getActiveIndex() * 20}%` }}
         >
-          <div className="w-[85%] max-w-[72px] h-full bg-nav-active rounded-[1.25rem]" />
+          <div />
         </div>
         
         {navItems.map((item, i) => {
@@ -39,14 +39,15 @@ export default function Navigation() {
             <NavLink
               key={item.to}
               to={item.to}
-              className={`relative z-10 flex flex-col items-center justify-center w-full h-full space-y-1 transition-colors duration-200 ${
+              className={`mobile-nav-link ${
                 isActive ? 'text-primary' : 'text-tx-secondary hover:text-tx'
               }`}
+              aria-current={isActive ? 'page' : undefined}
             >
-              <div className="flex items-center justify-center p-1">
-                <item.icon size={isActive && item.id === 'home' ? 22 : 20} strokeWidth={2.5} />
+              <div>
+                <item.icon size={isActive && item.id === 'home' ? 21 : 20} strokeWidth={isActive ? 2.4 : 2.1} />
               </div>
-              <span className="text-[10px] font-bold">{item.label}</span>
+              <span>{item.label}</span>
             </NavLink>
           );
         })}

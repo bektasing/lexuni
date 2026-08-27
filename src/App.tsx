@@ -21,11 +21,12 @@ function Sidebar() {
   ];
 
   return (
-    <aside className="hidden sm:flex flex-col w-64 h-screen border-r border-border bg-nav-bg fixed top-0 left-0 pt-8 px-4">
-      <div className="mb-10 px-4">
-        <h1 className="text-2xl font-bold tracking-tight text-tx">Lexuni</h1>
+    <aside className="app-sidebar hidden sm:flex">
+      <div className="sidebar-brand">
+        <h1>Lexuni</h1>
+        <span>Vocabulary practice</span>
       </div>
-      <nav className="flex flex-col space-y-2">
+      <nav className="sidebar-nav" aria-label="Primary navigation">
         {navItems.map((item) => (
           <NavLink
             key={item.to}
@@ -35,14 +36,14 @@ function Sidebar() {
               const path = location.pathname;
               const isMatch = item.to === '/' ? path === '/' : path.startsWith(item.to) || (item.to === '/history' && path.startsWith('/session/'));
               
-              return `flex items-center space-x-3 px-4 py-3 rounded-xl font-bold transition-all duration-150 ${
+              return `sidebar-link ${
                 isMatch
-                  ? 'bg-nav-active text-primary translate-x-1'
-                  : 'text-tx-secondary hover:bg-surface-hover hover:text-tx'
+                  ? 'sidebar-link-active'
+                  : ''
               }`;
             }}
           >
-            <item.icon size={20} strokeWidth={2.5} />
+            <item.icon size={19} strokeWidth={2.2} />
             <span>{item.label}</span>
           </NavLink>
         ))}
@@ -54,9 +55,9 @@ function Sidebar() {
 export default function App() {
   return (
     <Router>
-      <div className="min-h-screen bg-bg text-tx font-sans sm:pl-64 transition-colors">
+      <div className="app-frame">
         <Sidebar />
-        <main className="max-w-2xl mx-auto w-full min-h-screen pb-20 sm:pb-0">
+        <main className="app-main">
           <Routes>
             <Route path="/" element={<Home />} />
             <Route path="/practice" element={<Practice />} />

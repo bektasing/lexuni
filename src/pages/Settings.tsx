@@ -173,20 +173,22 @@ export default function Settings() {
   };
 
   return (
-    <div className="p-4 sm:p-6 pb-24 max-w-3xl mx-auto page-enter">
-      <header className="mb-8">
-        <h1 className="text-3xl font-bold text-tx">Settings</h1>
-        <p className="text-tx-secondary font-medium mt-1">Preferences and app info</p>
+    <div className="page-shell page-enter">
+      <header className="page-header">
+        <h1>Settings</h1>
+        <p>Preferences and app info</p>
       </header>
 
-      <section className="mb-10">
-        <div 
-          className="flex items-center justify-between cursor-pointer group mb-4"
+      <section className="settings-section">
+        <button
+          type="button"
+          className="settings-section-head"
           onClick={() => setIsThemeExpanded(!isThemeExpanded)}
+          aria-expanded={isThemeExpanded}
         >
           <div className="flex items-center space-x-2">
-            <h2 className="text-xl font-bold text-tx flex items-center space-x-2">
-              <SettingsIcon size={20} />
+            <h2>
+              <SettingsIcon size={18} />
               <span>App Theme</span>
             </h2>
           </div>
@@ -200,35 +202,33 @@ export default function Settings() {
                 </div>
               ) : null;
             })()}
-            <div className="text-tx-muted group-hover:text-tx transition-colors bg-surface p-1 rounded-lg border border-border">
+            <div className="text-tx-muted group-hover:text-tx transition-colors">
               <ChevronDown size={20} className={`transition-transform duration-200 ${isThemeExpanded ? 'rotate-180' : ''}`} />
             </div>
           </div>
-        </div>
+        </button>
         
-        <div className={`grid grid-cols-1 sm:grid-cols-2 gap-4 transition-all duration-300 origin-top overflow-hidden ${isThemeExpanded ? 'opacity-100 max-h-[1000px] mt-4' : 'opacity-0 max-h-0'}`}>
+        <div className={`theme-options ${isThemeExpanded ? 'theme-options-open' : ''}`}>
           {THEMES.map((theme) => {
             const isActive = activeTheme === theme.id;
             return (
               <button
                 key={theme.id}
                 onClick={() => handleThemeChange(theme.id)}
-                className={`p-4 rounded-2xl border-2 text-left flex items-center space-x-4 hover-card tap-card ${
-                  isActive ? 'border-primary bg-primary-soft ring-2 ring-primary-soft' : 'border-border bg-surface hover:border-border-strong hover:bg-bg'
-                }`}
+                className={`theme-option ${isActive ? 'theme-option-active' : ''}`}
               >
                 <div className="mr-3">
                   <theme.icon size={20} className="text-tx-secondary" />
                 </div>
                 <div className="flex-1">
-                  <h3 className="font-bold text-tx text-lg">{theme.name}</h3>
-                  <p className="text-tx-secondary text-sm font-medium">{theme.description}</p>
+                  <h3>{theme.name}</h3>
+                  <p>{theme.description}</p>
                 </div>
                 <div className="mr-1 flex items-center">
                   <ThemeChip preview={theme.preview} />
                 </div>
                 {isActive && (
-                  <div className="w-6 h-6 bg-primary rounded-full flex items-center justify-center text-white shrink-0">
+                  <div className="theme-check">
                     <Check size={14} strokeWidth={3} />
                   </div>
                 )}
@@ -238,38 +238,38 @@ export default function Settings() {
         </div>
       </section>
 
-      <section className="mb-10">
-        <h2 className="text-xl font-bold text-tx mb-4">App Info</h2>
-        <div className="bg-surface rounded-2xl border border-border shadow-sm overflow-hidden hover-card">
-          <div className="p-4 flex items-center justify-between border-b border-border">
+      <section className="settings-section">
+        <h2 className="settings-title">App Info</h2>
+        <div className="settings-group">
+          <div className="settings-row">
             <span className="font-bold text-tx-secondary">Vocabulary Size</span>
             <span className="text-tx-secondary font-medium">{wordsCount ?? '-'} words</span>
           </div>
-          <div className="p-4 flex items-center justify-between border-b border-border">
+          <div className="settings-row">
             <span className="font-bold text-tx-secondary">Import Groups</span>
             <span className="text-tx-secondary font-medium">{groupsCount ?? '-'} groups</span>
           </div>
-          <div className="p-4 flex items-center justify-between border-b border-border">
+          <div className="settings-row">
             <span className="font-bold text-tx-secondary">Total Sessions</span>
             <span className="text-tx-secondary font-medium">{sessionsCount ?? '-'} sessions</span>
           </div>
-          <div className="p-4 flex items-center justify-between bg-bg">
+          <div className="settings-row">
             <span className="font-bold text-tx-secondary">Lexuni Version</span>
             <span className="text-tx-secondary font-medium">3.0.0</span>
           </div>
         </div>
       </section>
 
-      <section>
-        <h2 className="text-xl font-bold text-tx mb-4">Data Management</h2>
-        <div className="bg-surface rounded-2xl border border-border shadow-sm overflow-hidden p-5 hover-card">
+      <section className="settings-section">
+        <h2 className="settings-title">Data Management</h2>
+        <div className="settings-content">
           <p className="text-tx-secondary font-medium mb-5 leading-relaxed">
             Export your Lexuni data to move it to another device or keep a personal backup.
           </p>
           <div className="flex flex-col sm:flex-row gap-3">
             <button
               onClick={handleExportBackup}
-              className="flex-1 flex items-center justify-center space-x-2 bg-surface text-tx-secondary py-3 px-4 rounded-xl border border-border font-bold active:bg-bg hover:bg-surface-hover"
+              className="button button-secondary flex-1"
             >
               <Download size={18} />
               <span>Export All Data</span>
@@ -284,7 +284,7 @@ export default function Settings() {
             />
             <button
               onClick={() => fileInputRef.current?.click()}
-              className="flex-1 flex items-center justify-center space-x-2 bg-primary text-white py-3 px-4 rounded-xl font-bold active:bg-primary-hover shadow-sm"
+              className="button button-primary flex-1"
             >
               <Upload size={18} />
               <span>Import Backup</span>
@@ -293,9 +293,9 @@ export default function Settings() {
         </div>
       </section>
 
-      <section className="mt-10">
-        <h2 className="text-xl font-bold text-tx mb-4">Developer</h2>
-        <div className="bg-surface rounded-2xl border border-border shadow-sm overflow-hidden p-5 flex flex-col sm:flex-row sm:items-center justify-between gap-4 hover-card">
+      <section className="settings-section">
+        <h2 className="settings-title">Developer</h2>
+        <div className="settings-content flex flex-col sm:flex-row sm:items-center justify-between gap-4">
           <div>
             <h3 className="font-bold text-tx text-lg">Hamza Bektaş</h3>
             <p className="text-tx-secondary font-medium">Developer of Lexuni</p>
@@ -304,7 +304,7 @@ export default function Settings() {
             href="https://hamzabektas.xyz"
             target="_blank"
             rel="noopener noreferrer"
-            className="flex-1 sm:flex-none flex items-center justify-center space-x-2 bg-surface text-tx-secondary hover:text-tx py-3 px-5 rounded-xl border border-border font-bold active:bg-bg hover:bg-surface-hover transition-colors"
+            className="button button-secondary flex-1 sm:flex-none"
           >
             <span>Visit Website</span>
             <ExternalLink size={18} />

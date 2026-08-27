@@ -4,7 +4,7 @@ import { db } from '../db/db';
 import { useNavigate, useSearchParams } from 'react-router-dom';
 import Modal from '../components/Modal';
 import ConfirmDialog from '../components/ConfirmDialog';
-import { X, Check, XCircle, Play, AlertTriangle } from 'lucide-react';
+import { X, Check, Play, AlertTriangle } from 'lucide-react';
 import type { StudySession } from '../types';
 
 function shuffleArray<T>(array: T[]): T[] {
@@ -274,41 +274,41 @@ export default function Practice() {
     const meaningLabel = isEnTr ? "Turkish meaning" : "English meaning";
 
     return (
-      <div className="flex flex-col h-screen sm:h-[calc(100vh-2rem)] sm:pt-8 bg-bg">
-        <header className="px-4 py-3 flex items-center justify-between bg-surface border-b border-border shrink-0 sm:rounded-t-3xl sm:mx-4 sm:border sm:shadow-sm">
-          <div className="flex space-x-3 sm:space-x-4 text-xs sm:text-sm font-bold">
-            <div className="text-tx-secondary">{activeSession.totalAnswered} answered</div>
+      <div className="practice-shell">
+        <header className="practice-bar">
+          <div className="practice-stats">
+            <div>{activeSession.totalAnswered} <span>answered</span></div>
             <div className="text-success-tx">{activeSession.correctCount} ✓</div>
-            <div className="text-danger-tx">{activeSession.wrongCount} ✗</div>
+            <div className="text-danger-tx">{activeSession.wrongCount} ×</div>
             <div className="text-primary">{accuracy}%</div>
           </div>
           <button 
             onClick={() => setFinishConfirmOpen(true)}
-            className="px-4 py-2 bg-surface-hover text-tx-secondary hover:bg-border font-bold text-sm btn-primary"
+            className="button button-quiet"
           >
             Finish
           </button>
         </header>
 
-        <main className="flex-1 flex flex-col p-6 sm:px-4 overflow-hidden relative">
+        <main className="practice-stage">
           {feedback && (
             <div className={`absolute inset-0 pointer-events-none transition-opacity duration-300 ${feedback === 'correct' ? 'bg-[radial-gradient(ellipse_at_center,_var(--color-emerald-500)_0%,_transparent_60%)] opacity-[0.08]' : 'bg-[radial-gradient(ellipse_at_center,_var(--color-rose-500)_0%,_transparent_60%)] opacity-[0.08]'}`} />
           )}
-          <div key={activeSession.currentWordId} className="flex-1 flex flex-col w-full h-full relative z-10">
-          <div className={`flex-1 flex flex-col items-center justify-center mb-8 ${isExiting ? 'motion-safe:animate-out motion-safe:fade-out motion-safe:slide-out-to-top-4 duration-150' : 'motion-safe:animate-in motion-safe:fade-in motion-safe:slide-in-from-bottom-4 duration-200 ease-out'}`}>
-            <div className="text-sm font-bold uppercase tracking-widest text-tx-muted mb-4">Select the {meaningLabel}</div>
-            <h1 className="text-4xl sm:text-5xl font-black text-tx text-center break-words max-w-full">
+          <div key={activeSession.currentWordId} className="practice-question-wrap">
+          <div className={`practice-question ${isExiting ? 'motion-safe:animate-out motion-safe:fade-out motion-safe:slide-out-to-top-4 duration-150' : 'motion-safe:animate-in motion-safe:fade-in motion-safe:slide-in-from-bottom-4 duration-200 ease-out'}`}>
+            <div className="practice-direction">Select the {meaningLabel}</div>
+            <h1>
               {questionText}
             </h1>
             {feedback === 'correct' && (
-              <div className="text-success-tx font-bold text-sm uppercase tracking-widest mt-4 animate-in fade-in slide-in-from-bottom-1">Correct</div>
+              <div className="practice-feedback text-success-tx animate-in fade-in slide-in-from-bottom-1">Correct</div>
             )}
             {feedback === 'wrong' && (
-              <div className="text-danger-tx font-bold text-sm uppercase tracking-widest mt-4 animate-in fade-in slide-in-from-bottom-1">Not quite</div>
+              <div className="practice-feedback text-danger-tx animate-in fade-in slide-in-from-bottom-1">Not quite</div>
             )}
           </div>
 
-          <div className="grid grid-cols-1 gap-3 w-full max-w-md mx-auto">
+          <div className="answer-list">
             {activeSession.currentOptions.map((optId, i) => {
               const optWord = words.find(w => w.id === optId);
               if (!optWord) return null;
@@ -317,17 +317,17 @@ export default function Practice() {
               const isCorrect = optId === activeSession.currentWordId;
               const optionText = isEnTr ? optWord.turkish : optWord.english;
               
-              let btnClass = "bg-surface border-2 border-border text-tx-secondary hover:border-border-strong active:bg-bg";
+              let btnClass = "answer-neutral";
               
               if (isWaiting) {
                 if (isCorrect) {
-                  btnClass = "bg-emerald-500 border-emerald-500 text-white shadow-lg motion-safe:animate-correct-pulse z-10";
+                  btnClass = "answer-correct motion-safe:animate-correct-pulse z-10";
                 } else if (isSelected && !isCorrect) {
-                  btnClass = "bg-rose-500 border-rose-500 text-white shadow-lg motion-safe:animate-shake z-10";
+                  btnClass = "answer-wrong motion-safe:animate-shake z-10";
                 } else if (!isSelected && isCorrect) {
-                  btnClass = "bg-emerald-500 border-emerald-500 text-white shadow-lg motion-safe:animate-correct-pulse z-10";
+                  btnClass = "answer-correct motion-safe:animate-correct-pulse z-10";
                 } else {
-                  btnClass = "bg-surface border-2 border-border text-tx-muted opacity-50";
+                  btnClass = "answer-neutral answer-muted";
                 }
               }
 
@@ -336,7 +336,7 @@ export default function Practice() {
                   key={optId}
                   disabled={isWaiting}
                   onClick={() => handleAnswer(optId)}
-                  className={`p-5 rounded-2xl font-bold text-lg text-left transition-all duration-200 flex items-center justify-between hover:shadow-md tap-card ${btnClass} ${isExiting ? 'motion-safe:animate-out motion-safe:fade-out motion-safe:slide-out-to-top-4 duration-150' : 'motion-safe:animate-in motion-safe:fade-in motion-safe:slide-in-from-bottom-4 duration-200 ease-out'}`}
+                  className={`answer-row ${btnClass} ${isExiting ? 'motion-safe:animate-out motion-safe:fade-out motion-safe:slide-out-to-top-4 duration-150' : 'motion-safe:animate-in motion-safe:fade-in motion-safe:slide-in-from-bottom-4 duration-200 ease-out'}`}
                   style={isWaiting ? (!isSelected && isCorrect ? { animationDelay: '100ms' } : {}) : (isExiting ? {} : { animationDelay: `${i * 25}ms`, animationFillMode: 'both' })}
                 >
                   <span>{optionText}</span>
@@ -350,7 +350,7 @@ export default function Practice() {
               <button
                 onClick={handleContinueAfterWrong}
                 disabled={isExiting}
-                className="mt-6 p-4 bg-tx text-bg rounded-2xl font-bold text-lg flex items-center justify-center space-x-2 active:scale-[0.98] transition-transform animate-in fade-in slide-in-from-bottom-4 shadow-lg" style={{ animationDelay: '300ms', animationFillMode: 'both' }}
+                className="button continue-answer animate-in fade-in slide-in-from-bottom-4" style={{ animationDelay: '300ms', animationFillMode: 'both' }}
               >
                 <span>Tap to Continue</span>
               </button>
@@ -376,36 +376,34 @@ export default function Practice() {
 
   if (!canPractice) {
     return (
-      <div className="flex flex-col items-center justify-center min-h-[80vh] p-6 text-center">
-        <div className="w-20 h-20 bg-amber-100 text-warning-tx rounded-3xl flex items-center justify-center mb-6">
-          <XCircle size={40} strokeWidth={2} />
-        </div>
-        <h2 className="text-xl font-bold mb-2">Not enough words</h2>
-        <p className="text-tx-secondary mb-8">You need at least 4 words to practice.</p>
+      <div className="page-shell page-enter">
+        <section className="empty-state">
+        <h2>Not enough words.</h2>
+        <p>You need at least 4 words to practice.</p>
         <button
           onClick={() => navigate('/')}
-          className="bg-tx text-bg px-8 py-3 rounded-xl font-semibold"
+          className="button button-secondary"
         >
           Go Back
         </button>
+        </section>
       </div>
     );
   }
 
   return (
-    <div className="p-4 sm:p-6 pb-24 max-w-xl mx-auto page-enter">
-      <header className="mb-8">
-        <h1 className="text-3xl font-bold text-tx">Practice Setup</h1>
-        <p className="text-tx-secondary font-medium mt-1">Select what you want to practice.</p>
+    <div className="page-shell page-enter">
+      <header className="page-header">
+        <h1>Practice</h1>
+        <p>Select what you want to practice.</p>
       </header>
 
-      <div className="space-y-4">
+      <div className="practice-source-list">
         <div 
           onClick={() => { setSelectedSource('all'); setSelectedGroupId(null); }}
-          className={`p-5 rounded-2xl border-2 cursor-pointer transition-all hover-card tap-card ${selectedSource === 'all' ? 'border-primary bg-primary-soft' : 'border-border bg-surface hover:border-border-strong'}`}
+          className={`practice-source ${selectedSource === 'all' ? 'practice-source-active' : ''}`}
         >
-          <h3 className="font-bold text-lg text-tx">All Words</h3>
-          <p className="text-tx-secondary font-medium">{words.length} words</p>
+          <h3>All Words</h3><p>{words.length} words</p>
         </div>
 
         {groups.sort((a,b) => b.createdAt.localeCompare(a.createdAt)).map(g => {
@@ -417,10 +415,9 @@ export default function Practice() {
             <div 
               key={g.id}
               onClick={() => { setSelectedSource('group'); setSelectedGroupId(g.id); }}
-              className={`p-5 rounded-2xl border-2 cursor-pointer transition-all hover-card tap-card ${isSelected ? 'border-primary bg-primary-soft' : 'border-border bg-surface hover:border-border-strong'}`}
+              className={`practice-source ${isSelected ? 'practice-source-active' : ''}`}
             >
-              <h3 className="font-bold text-lg text-tx">{g.name}</h3>
-              <p className="text-tx-secondary font-medium">{count} words</p>
+              <h3>{g.name}</h3><p>{count} words</p>
             </div>
           );
         })}
@@ -428,7 +425,7 @@ export default function Practice() {
 
       <button
         onClick={() => startSession(selectedSource, selectedGroupId)}
-        className="w-full mt-8 bg-primary text-white py-4 rounded-2xl font-bold text-lg flex items-center justify-center space-x-2 btn-primary shadow-lg"
+        className="button button-primary button-large mt-8"
       >
         <Play size={20} fill="currentColor" />
         <span>Start Session</span>

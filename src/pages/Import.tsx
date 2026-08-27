@@ -159,41 +159,41 @@ Rules:
   const invalidCount = preview?.filter(p => p.status === 'invalid').length || 0;
 
   return (
-    <div className="p-4 sm:p-6 pb-24 max-w-2xl mx-auto page-enter">
-      <header className="mb-8 flex items-center space-x-4">
+    <div className="page-shell page-enter">
+      <header className="page-header flex items-start gap-3">
         <button 
           onClick={() => navigate('/words')}
-          className="p-2 bg-surface hover:bg-surface-hover text-tx-secondary rounded-xl border border-border transition-colors"
+          className="icon-button -ml-2"
         >
           <ChevronLeft size={24} />
         </button>
         <div>
-          <h1 className="text-3xl font-bold text-tx">Import Words</h1>
-          <p className="text-tx-secondary font-medium mt-1">Paste your vocabulary list below.</p>
+          <h1>Import Words</h1>
+          <p>Paste your vocabulary list below.</p>
         </div>
       </header>
 
-      <div className="bg-gradient-to-r from-blue-600 to-indigo-600 rounded-3xl p-6 text-white mb-8 shadow-lg shadow-lg">
-        <div className="flex items-center space-x-3 mb-3">
-          <Sparkles className="text-blue-200" />
-          <h2 className="text-xl font-bold">AI Import Helper</h2>
+      <section className="import-helper">
+        <div>
+          <Sparkles size={18} />
+          <h2>AI Import Helper</h2>
         </div>
-        <p className="text-blue-100 text-sm mb-5 leading-relaxed">
+        <p>
           Upload a screenshot or text to ChatGPT or another AI, then use this prompt to convert it into Lexuni's import format.
         </p>
         <button
           onClick={copyPrompt}
-          className="flex items-center justify-center w-full space-x-2 bg-surface/20 hover:bg-surface/30 text-white py-3 rounded-xl font-semibold btn-primary"
+          className="button button-secondary"
         >
           {copied ? <CheckCircle2 size={18} /> : <Copy size={18} />}
           <span>{copied ? 'Copied!' : 'Copy AI Prompt'}</span>
         </button>
-      </div>
+      </section>
 
-      <div className="bg-surface p-4 rounded-3xl shadow-sm border border-border mb-6 hover-card">
-        <div className="flex items-start justify-between mb-2">
-          <label className="font-bold text-tx-secondary ml-2">Vocabulary List</label>
-          <div className="text-xs text-tx-muted bg-surface-hover px-2 py-1 rounded font-mono">word = meaning</div>
+      <section className="import-workspace">
+        <div className="import-label">
+          <label>Vocabulary List</label>
+          <code>word = meaning</code>
         </div>
         <textarea
           value={input}
@@ -202,42 +202,39 @@ Rules:
             if (preview) setPreview(null);
           }}
           placeholder={"# Chapter 1\n\nreliable = güvenilir\ndeploy = yayına almak\nretrieve = geri almak"}
-          className="w-full h-48 p-4 bg-bg rounded-2xl outline-none focus:ring-2 focus:ring-primary resize-none font-mono text-sm"
+          className="field import-textarea"
         ></textarea>
         
         <button
           onClick={handlePreview}
           disabled={!input.trim()}
-          className="w-full mt-4 flex items-center justify-center space-x-2 bg-tx text-bg py-4 rounded-2xl font-bold text-lg disabled:opacity-50 disabled:active:scale-100 btn-primary"
+          className="button import-preview-button"
         >
           <ImportIcon size={20} />
           <span>Preview Import</span>
         </button>
-      </div>
+      </section>
 
       {preview && (
-        <div className="bg-surface p-6 rounded-3xl shadow-sm border border-border animate-in fade-in slide-in-from-bottom-4">
-          <h3 className="font-bold text-xl mb-1">Import Preview</h3>
-          <p className="text-tx-secondary font-medium mb-4">Group: <span className="text-tx font-bold">{groupName}</span></p>
+        <section className="import-preview animate-in fade-in slide-in-from-bottom-4">
+          <h3>Import Preview</h3>
+          <p>Group: <strong>{groupName}</strong></p>
           
-          <div className="grid grid-cols-3 gap-3 mb-6">
-            <div className="bg-success-bg text-success-tx p-3 rounded-xl text-center">
-              <div className="text-2xl font-black">{validCount}</div>
-              <div className="text-xs font-bold uppercase mt-1">New</div>
+          <div className="preview-stats">
+            <div className="text-success-tx">
+              <strong>{validCount}</strong><span>new</span>
             </div>
-            <div className="bg-warning-bg text-warning-tx p-3 rounded-xl text-center">
-              <div className="text-2xl font-black">{duplicateCount}</div>
-              <div className="text-xs font-bold uppercase mt-1">Duplicates</div>
+            <div className="text-warning-tx">
+              <strong>{duplicateCount}</strong><span>duplicates</span>
             </div>
-            <div className="bg-danger-bg text-danger-tx p-3 rounded-xl text-center">
-              <div className="text-2xl font-black">{invalidCount}</div>
-              <div className="text-xs font-bold uppercase mt-1">Invalid</div>
+            <div className="text-danger-tx">
+              <strong>{invalidCount}</strong><span>invalid</span>
             </div>
           </div>
 
-          <div className="max-h-60 overflow-y-auto space-y-2 mb-6 pr-2">
+          <div className="preview-list">
             {preview.map((p, i) => (
-              <div key={i} className="flex items-center space-x-3 text-sm p-2 rounded-lg bg-bg">
+              <div key={i} className="preview-row">
                 {p.status === 'valid' && <CheckCircle2 className="text-emerald-500 shrink-0" size={16} />}
                 {p.status === 'duplicate' && <Info className="text-warning-tx shrink-0" size={16} />}
                 {p.status === 'invalid' && <AlertCircle className="text-rose-500 shrink-0" size={16} />}
@@ -262,12 +259,12 @@ Rules:
             <button
               onClick={handleImport}
               disabled={isImporting}
-              className="w-full bg-primary text-white py-4 rounded-2xl font-bold text-lg btn-primary shadow-lg disabled:cursor-not-allowed disabled:opacity-50"
+              className="button button-primary button-large w-full"
             >
               {isImporting ? 'Importing…' : `Import ${validCount} ${validCount === 1 ? 'Word' : 'Words'}`}
             </button>
           )}
-        </div>
+        </section>
       )}
 
       <Modal 

@@ -254,26 +254,26 @@ export default function Words() {
 
   if (selectedGroupId && selectedGroup) {
     return (
-      <div className="p-4 sm:p-6 pb-24 max-w-3xl mx-auto page-enter">
-        <header className="mb-6 flex items-start justify-between">
+      <div className="page-shell page-enter">
+        <header className="page-header flex items-start justify-between gap-4">
           <div className="flex-1 pr-4">
             <button 
               onClick={() => {
                 setSelectedGroupId(null);
                 navigate('/words', { replace: true });
               }}
-              className="flex items-center space-x-1 text-tx-secondary hover:text-tx mb-2 font-medium"
+              className="text-action mb-3 -ml-1"
             >
               <ChevronLeft size={20} />
               <span>Back</span>
             </button>
-            <h1 className="text-3xl font-bold text-tx break-words">{selectedGroup.name}</h1>
-            <p className="text-tx-secondary font-medium mt-1">{groupWords.length} words</p>
+            <h1 className="break-words">{selectedGroup.name}</h1>
+            <p>{groupWords.length} words</p>
           </div>
           <div className="flex items-center space-x-2 shrink-0">
             <button
               onClick={handleExport}
-              className="p-3 bg-surface border border-border rounded-xl text-tx-secondary hover:bg-bg active:bg-surface-hover shadow-sm"
+              className="icon-button"
               title="Export Backup"
               aria-label="Export group"
             >
@@ -281,7 +281,7 @@ export default function Words() {
             </button>
             <button
               onClick={() => { setIsEditingGroup(true); setGroupNameInput(selectedGroup.name); }}
-              className="p-3 bg-surface border border-border rounded-xl text-tx-secondary hover:bg-bg active:bg-surface-hover shadow-sm"
+              className="icon-button"
               title="Rename Group"
               aria-label="Rename group"
             >
@@ -289,7 +289,7 @@ export default function Words() {
             </button>
             <button
               onClick={() => setDeleteGroupConfirmId(selectedGroup.id)}
-              className="p-3 bg-surface border border-border rounded-xl text-danger-tx hover:bg-danger-bg active:bg-danger-bg shadow-sm"
+              className="icon-button icon-button-danger"
               title="Delete Import"
               aria-label="Delete group"
             >
@@ -341,7 +341,7 @@ export default function Words() {
           </div>
         </Modal>
 
-        <div className="bg-surface p-4 rounded-2xl shadow-sm border border-border mb-6 flex flex-col sm:flex-row gap-3">
+        <div className="word-toolbar">
           <div className="relative flex-1">
             <Search className="absolute left-3 top-1/2 -translate-y-1/2 text-tx-muted" size={20} />
             <input
@@ -349,13 +349,13 @@ export default function Words() {
               placeholder="Search words..."
               value={search}
               onChange={e => setSearch(e.target.value)}
-              className="w-full pl-10 pr-4 py-3 bg-bg rounded-xl outline-none focus:ring-2 focus:ring-primary transition-shadow"
+              className="field pl-10"
             />
           </div>
           <select
             value={sort}
             onChange={e => setSort(e.target.value as any)}
-            className="px-4 py-3 bg-bg rounded-xl outline-none focus:ring-2 focus:ring-primary font-medium text-tx-secondary cursor-pointer"
+            className="field sm:w-auto font-medium text-tx-secondary cursor-pointer"
           >
             <option value="newest">Newest</option>
             <option value="oldest">Oldest</option>
@@ -369,7 +369,7 @@ export default function Words() {
               setEnInput('');
               setTrInput('');
             }}
-            className="flex items-center justify-center space-x-2 bg-primary text-white px-5 py-3 rounded-xl font-medium active:bg-primary-hover"
+            className="button button-primary"
           >
             <Plus size={20} />
             <span className="hidden sm:inline">Add Word</span>
@@ -377,15 +377,15 @@ export default function Words() {
         </div>
 
         {(isAdding || editingId) && (
-          <div className="bg-primary-soft border border-primary-soft p-4 rounded-2xl mb-6 shadow-inner">
-            <h3 className="font-bold text-primary mb-3">{editingId ? 'Edit Word' : 'Add New Word'}</h3>
+          <div className="inline-editor">
+            <h3>{editingId ? 'Edit Word' : 'Add New Word'}</h3>
             <div className="flex flex-col sm:flex-row gap-3">
               <input
                 type="text"
                 placeholder="English"
                 value={enInput}
                 onChange={e => setEnInput(e.target.value)}
-                className="flex-1 px-4 py-3 rounded-xl outline-none focus:ring-2 focus:ring-primary border border-border"
+                className="field flex-1"
                 autoFocus
               />
               <input
@@ -394,12 +394,12 @@ export default function Words() {
                 value={trInput}
                 onChange={e => setTrInput(e.target.value)}
                 onKeyDown={e => e.key === 'Enter' && handleSaveWord()}
-                className="flex-1 px-4 py-3 rounded-xl outline-none focus:ring-2 focus:ring-primary border border-border"
+                className="field flex-1"
               />
               <div className="flex gap-2">
                 <button
                   onClick={handleSaveWord}
-                  className="flex-1 sm:flex-none flex items-center justify-center bg-primary text-white px-4 py-3 rounded-xl active:bg-primary-hover"
+                  className="button button-primary flex-1 sm:flex-none"
                 >
                   <Check size={20} />
                 </button>
@@ -408,7 +408,7 @@ export default function Words() {
                     setIsAdding(false);
                     setEditingId(null);
                   }}
-                  className="flex-1 sm:flex-none flex items-center justify-center bg-surface text-tx-secondary border border-border px-4 py-3 rounded-xl active:bg-bg"
+                  className="button button-secondary flex-1 sm:flex-none"
                 >
                   <X size={20} />
                 </button>
@@ -417,15 +417,15 @@ export default function Words() {
           </div>
         )}
 
-        <div className="space-y-3">
+        <div className="word-list">
           {filteredAndSortedWords.map(word => (
-            <div key={word.id} className="bg-surface p-4 rounded-2xl shadow-sm border border-border flex items-center justify-between group">
+            <div key={word.id} className="word-row group">
               <div className="flex-1">
-                <div className="font-bold text-lg text-tx">{word.english}</div>
-                <div className="text-tx-secondary">{word.turkish}</div>
-                <div className="text-xs text-tx-muted mt-2 flex space-x-3 font-medium">
-                  <span className="text-success-tx bg-success-bg px-2 py-0.5 rounded-md">✓ {word.correctCount}</span>
-                  <span className="text-danger-tx bg-danger-bg px-2 py-0.5 rounded-md">✗ {word.wrongCount}</span>
+                <div className="word-primary">{word.english}</div>
+                <div className="word-translation">{word.turkish}</div>
+                <div className="word-stats">
+                  <span className="text-success-tx">✓ {word.correctCount}</span>
+                  <span className="text-danger-tx">✗ {word.wrongCount}</span>
                 </div>
               </div>
               
@@ -438,14 +438,14 @@ export default function Words() {
                     setIsAdding(false);
                     window.scrollTo({ top: 0, behavior: 'smooth' });
                   }}
-                  className="p-2.5 text-tx-muted hover:text-primary hover:bg-primary-soft rounded-xl transition-colors"
+                  className="icon-button"
                   aria-label={`Edit ${word.english}`}
                 >
                   <Edit2 size={18} />
                 </button>
                 <button
                   onClick={() => setDeleteConfirmId(word.id)}
-                  className="p-2.5 text-tx-muted hover:text-danger-tx hover:bg-danger-bg rounded-xl transition-colors"
+                  className="icon-button icon-button-danger"
                   aria-label={`Delete ${word.english}`}
                 >
                   <Trash2 size={18} />
@@ -503,11 +503,11 @@ export default function Words() {
   };
 
   return (
-    <div className="p-4 sm:p-6 pb-24 max-w-3xl mx-auto page-enter">
-      <header className="mb-6 flex flex-col sm:flex-row sm:items-center justify-between gap-4">
+    <div className="page-shell page-enter">
+      <header className="page-header flex flex-col sm:flex-row sm:items-end justify-between gap-5">
         <div>
-          <h1 className="text-3xl font-bold text-tx">Vocabulary</h1>
-          <p className="text-tx-secondary font-medium mt-1">
+          <h1>Vocabulary</h1>
+          <p>
             {words?.length || 0} words &middot; {groups?.length || 0} imports
           </p>
         </div>
@@ -515,7 +515,7 @@ export default function Words() {
           {!isMerging && (groups?.length || 0) > 1 && (
             <button
               onClick={() => setIsMerging(true)}
-              className="flex-1 sm:flex-none flex items-center justify-center space-x-2 px-4 py-2.5 bg-surface border border-border text-tx-secondary font-bold rounded-xl hover:bg-surface-hover btn-primary"
+              className="button button-secondary"
             >
               <Combine size={18} />
               <span>Merge</span>
@@ -523,7 +523,7 @@ export default function Words() {
           )}
           <button
             onClick={() => navigate('/words/import')}
-            className="flex-1 sm:flex-none flex items-center justify-center space-x-2 px-4 py-2.5 bg-primary text-white font-bold rounded-xl hover:bg-primary-hover btn-primary"
+            className="button button-primary"
           >
             <Import size={18} />
             <span>Import Words</span>
@@ -532,7 +532,7 @@ export default function Words() {
       </header>
 
       {isMerging && (
-        <div className="bg-primary-soft border border-primary-soft p-4 sm:p-5 rounded-2xl mb-6 shadow-sm">
+        <div className="inline-editor mb-8">
           <div className="flex items-center justify-between mb-4">
             <h3 className="font-bold text-primary text-lg">Merge Imports</h3>
             <button
@@ -567,15 +567,15 @@ export default function Words() {
         </div>
       )}
 
-      <div className="space-y-4">
+      <div className="group-list">
         {groups?.sort((a, b) => b.createdAt.localeCompare(a.createdAt)).map(group => {
           const groupWordCount = words?.filter(w => w.groupId === group.id).length || 0;
           const isSelected = selectedGroupIds.has(group.id);
           
           return (
-            <div 
+            <div
               key={group.id} 
-              className={`bg-surface p-5 rounded-2xl shadow-sm border transition-all flex flex-col sm:flex-row sm:items-center justify-between gap-4 hover-card tap-card ${isSelected ? 'border-primary ring-2 ring-primary-soft' : 'border-border'}`}
+              className={`group-row ${isSelected ? 'group-row-selected' : ''}`}
               onClick={isMerging ? () => toggleGroupSelection(group.id) : undefined}
             >
               <div className="flex items-center space-x-4 flex-1">
@@ -589,8 +589,8 @@ export default function Words() {
                   />
                 )}
                 <div className={`flex-1 ${isMerging ? 'cursor-pointer' : ''}`}>
-                  <h2 className="font-bold text-lg text-tx mb-1">{group.name}</h2>
-                  <p className="text-tx-secondary text-sm font-medium">{groupWordCount} words</p>
+                  <h2>{group.name}</h2>
+                  <p>{groupWordCount} words</p>
                 </div>
               </div>
 
@@ -601,13 +601,13 @@ export default function Words() {
                       setSelectedGroupId(group.id);
                       navigate(`/words?groupId=${encodeURIComponent(group.id)}`, { replace: true });
                     }}
-                    className="flex-1 sm:flex-none flex items-center justify-center space-x-1 px-5 py-2.5 bg-surface-hover text-tx-secondary rounded-xl font-bold btn-primary hover:bg-border"
+                    className="button button-quiet flex-1 sm:flex-none"
                   >
                     View
                   </button>
                   <button
                     onClick={() => navigate(`/practice?source=group&groupId=${group.id}`)}
-                    className="flex-1 sm:flex-none flex items-center justify-center space-x-1 px-5 py-2.5 bg-primary-soft text-primary rounded-xl font-bold btn-primary hover:opacity-80"
+                    className="button button-quiet text-primary flex-1 sm:flex-none"
                   >
                     <Play size={16} fill="currentColor" />
                     <span>Practice</span>

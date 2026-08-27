@@ -47,11 +47,11 @@ export default function SessionDetail() {
   const mistakes = answers.filter(a => !a.correct);
 
   return (
-    <div className="p-4 sm:p-6 pb-24 max-w-2xl mx-auto page-enter">
-      <header className="mb-8 flex items-center justify-between">
+    <div className="page-shell page-enter">
+      <header className="flex items-center justify-between mb-10">
         <button
           onClick={() => navigate('/history')}
-          className="flex items-center space-x-1 text-tx-secondary hover:text-tx font-medium"
+          className="text-action"
         >
           <ChevronLeft size={20} />
           <span>History</span>
@@ -59,70 +59,66 @@ export default function SessionDetail() {
         
         <button
           onClick={() => setDeleteConfirm(true)}
-          className="p-2 text-tx-muted hover:text-danger-tx hover:bg-danger-bg rounded-xl transition-colors"
+          className="icon-button icon-button-danger"
           aria-label="Delete session"
         >
           <Trash2 size={20} />
         </button>
       </header>
 
-      <div className="text-center mb-10">
-        <h1 className="text-3xl font-black text-tx mb-2">Session Complete</h1>
-        <p className="text-lg font-bold text-primary mb-1">
+      <div className="session-summary-head">
+        <span>Session complete</span>
+        <h1>
           {session.sourceType === 'all' ? 'All Words' : session.groupName || 'Deleted Group'}
-        </p>
-        <p className="text-sm text-tx-secondary font-medium">
+        </h1>
+        <p>
           {new Date(session.startedAt).toLocaleString('en-US', { 
             month: 'short', day: 'numeric', hour: '2-digit', minute: '2-digit' 
           })}
         </p>
       </div>
 
-      <div className="grid grid-cols-2 sm:grid-cols-4 gap-3 mb-10">
-        <div className="bg-bg p-4 rounded-2xl text-center">
-          <div className="text-2xl font-black text-tx">{session.totalAnswered}</div>
-          <div className="text-xs font-bold uppercase mt-1 text-tx-secondary">Answered</div>
+      <div className="session-stat-line">
+        <div>
+          <strong>{session.totalAnswered}</strong><span>answered</span>
         </div>
-        <div className="bg-success-bg p-4 rounded-2xl text-center">
-          <div className="text-2xl font-black text-success-tx">{session.correctCount}</div>
-          <div className="text-xs font-bold uppercase mt-1 text-success-tx">Correct</div>
+        <div>
+          <strong className="text-success-tx">{session.correctCount}</strong><span>correct</span>
         </div>
-        <div className="bg-danger-bg p-4 rounded-2xl text-center">
-          <div className="text-2xl font-black text-danger-tx">{session.wrongCount}</div>
-          <div className="text-xs font-bold uppercase mt-1 text-danger-tx">Wrong</div>
+        <div>
+          <strong className="text-danger-tx">{session.wrongCount}</strong><span>wrong</span>
         </div>
-        <div className="bg-primary-soft p-4 rounded-2xl text-center">
-          <div className="text-2xl font-black text-primary">{accuracy}%</div>
-          <div className="text-xs font-bold uppercase mt-1 text-primary">Accuracy</div>
+        <div>
+          <strong className="text-primary">{accuracy}%</strong><span>accuracy</span>
         </div>
       </div>
 
-      <div className="flex flex-col sm:flex-row gap-3 mb-10">
+      <div className="flex flex-wrap gap-2 mb-12">
         <button
           onClick={() => navigate('/')}
-          className="flex-1 bg-tx text-bg py-4 rounded-xl font-bold text-lg active:scale-[0.98]"
+          className="button button-primary"
         >
           Back Home
         </button>
         <button
           onClick={() => navigate('/practice')}
-          className="flex-1 bg-primary-soft text-primary border-2 border-primary-soft py-4 rounded-xl font-bold text-lg active:scale-[0.98]"
+          className="button button-quiet text-primary"
         >
           Practice Again
         </button>
       </div>
 
       <div>
-        <h2 className="text-xl font-bold text-tx mb-4">Mistakes</h2>
+        <h2 className="section-title">Mistakes</h2>
         
         {mistakes.length === 0 ? (
-          <div className="bg-success-bg text-success-tx p-6 rounded-2xl text-center font-bold">
+          <div className="inline-notice text-success-tx">
             Perfect session — no mistakes.
           </div>
         ) : (
-          <div className="space-y-3">
+          <div className="mistake-list">
             {mistakes.map(m => (
-              <div key={m.id} className="bg-surface p-4 rounded-xl border border-border shadow-sm flex items-center justify-between">
+              <div key={m.id} className="mistake-row">
                 <span className="font-bold text-tx">{m.english}</span>
                 <span className="text-tx-muted mx-2">→</span>
                 <span className="text-tx-secondary font-medium">{m.turkish}</span>
