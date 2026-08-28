@@ -50,21 +50,42 @@ export default function Modal({
   const titleId = useId();
   const dialogRef = useRef<HTMLDivElement>(null);
   const onCloseRef = useRef(onClose);
+  const previouslyFocusedRef = useRef<HTMLElement | null>(null);
 
   useEffect(() => {
     onCloseRef.current = onClose;
   }, [onClose]);
 
   useEffect(() => {
+    if (isOpen) return;
+
+    const rememberFocusedElement = (event: FocusEvent) => {
+      if (event.target instanceof HTMLElement) previouslyFocusedRef.current = event.target;
+    };
+    const rememberPointerTarget = (event: PointerEvent) => {
+      const target = event.target instanceof Element ? event.target.closest<HTMLElement>('button, a, input, select, textarea, [tabindex]') : null;
+      if (target) previouslyFocusedRef.current = target;
+    };
+
+    if (document.activeElement instanceof HTMLElement) previouslyFocusedRef.current = document.activeElement;
+    document.addEventListener('focusin', rememberFocusedElement);
+    document.addEventListener('pointerdown', rememberPointerTarget, true);
+    return () => {
+      document.removeEventListener('focusin', rememberFocusedElement);
+      document.removeEventListener('pointerdown', rememberPointerTarget, true);
+    };
+  }, [isOpen]);
+
+  useEffect(() => {
     if (!isOpen) return;
 
-    const previouslyFocused = document.activeElement instanceof HTMLElement
-      ? document.activeElement
-      : null;
+    const previouslyFocused = previouslyFocusedRef.current;
     lockBodyScroll();
 
     const focusDialog = window.requestAnimationFrame(() => {
-      const preferredTarget = dialogRef.current?.querySelector<HTMLElement>('[autofocus]');
+      const activeElement = document.activeElement instanceof HTMLElement ? document.activeElement : null;
+      if (activeElement && dialogRef.current?.contains(activeElement)) return;
+      const preferredTarget = dialogRef.current?.querySelector<HTMLElement>('[data-autofocus]');
       const firstTarget = dialogRef.current?.querySelector<HTMLElement>(FOCUSABLE_SELECTOR);
       (preferredTarget ?? firstTarget ?? dialogRef.current)?.focus({ preventScroll: true });
     });
@@ -132,7 +153,7 @@ export default function Modal({
         onPointerDown={(event) => event.stopPropagation()}
       >
         <header className="modal-header">
-          <h2 id={titleId} className="min-w-0 break-words text-xl font-bold text-tx">
+          <h2 id={titleId} className="modal-title">
             {title}
           </h2>
           <button

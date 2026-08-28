@@ -164,38 +164,24 @@ Rules:
         <button 
           onClick={() => navigate('/words')}
           className="icon-button -ml-2"
+          aria-label="Back to vocabulary"
         >
           <ChevronLeft size={24} />
         </button>
         <div>
-          <h1>Import Words</h1>
-          <p>Paste your vocabulary list below.</p>
+          <span className="eyebrow">Add to your library</span>
+          <h1>Import Vocabulary</h1>
+          <p>Paste words or use the AI helper.</p>
         </div>
       </header>
 
-      <section className="import-helper">
-        <div>
-          <Sparkles size={18} />
-          <h2>AI Import Helper</h2>
-        </div>
-        <p>
-          Upload a screenshot or text to ChatGPT or another AI, then use this prompt to convert it into Lexuni's import format.
-        </p>
-        <button
-          onClick={copyPrompt}
-          className="button button-secondary"
-        >
-          {copied ? <CheckCircle2 size={18} /> : <Copy size={18} />}
-          <span>{copied ? 'Copied!' : 'Copy AI Prompt'}</span>
-        </button>
-      </section>
-
       <section className="import-workspace">
         <div className="import-label">
-          <label>Vocabulary List</label>
+          <label htmlFor="vocabulary-import">Vocabulary list</label>
           <code>word = meaning</code>
         </div>
         <textarea
+          id="vocabulary-import"
           value={input}
           onChange={e => {
             setInput(e.target.value);
@@ -216,7 +202,7 @@ Rules:
       </section>
 
       {preview && (
-        <section className="import-preview animate-in fade-in slide-in-from-bottom-4">
+        <section className="import-preview">
           <h3>Import Preview</h3>
           <p>Group: <strong>{groupName}</strong></p>
           
@@ -267,6 +253,20 @@ Rules:
         </section>
       )}
 
+      <section className="import-helper">
+        <div>
+          <Sparkles size={18} aria-hidden="true" />
+          <h2>AI Import Helper</h2>
+        </div>
+        <p>
+          Turn a screenshot or a block of text into Lexuni’s simple import format with your preferred AI tool.
+        </p>
+        <button onClick={copyPrompt} className="button button-secondary">
+          {copied ? <CheckCircle2 size={18} aria-hidden="true" /> : <Copy size={18} aria-hidden="true" />}
+          <span>{copied ? 'Prompt copied' : 'Copy AI Prompt'}</span>
+        </button>
+      </section>
+
       <Modal 
         isOpen={!!importSuccess} 
         onClose={closeImportSuccess}
@@ -276,14 +276,14 @@ Rules:
             <button
               type="button"
               onClick={viewImportedGroup}
-              className="min-h-11 flex-1 rounded-xl border border-border bg-surface px-4 py-3 font-bold text-tx-secondary transition-colors hover:bg-surface-hover"
+              className="button button-secondary"
             >
               View Group
             </button>
             <button
               type="button"
               onClick={closeImportSuccess}
-              className="min-h-11 flex-1 rounded-xl bg-primary px-4 py-3 font-bold text-white transition-colors hover:bg-primary-hover"
+              className="button button-primary"
             >
               Done
             </button>
@@ -314,17 +314,17 @@ Rules:
           <button
             type="button"
             onClick={() => setImportError(null)}
-            className="min-h-11 w-full rounded-xl bg-primary px-4 py-3 font-bold text-white hover:bg-primary-hover"
+            className="button button-primary button-block"
           >
             Try Again
           </button>
         }
       >
-        <div className="flex gap-4">
-          <div className="flex size-11 shrink-0 items-center justify-center rounded-2xl bg-danger-bg text-danger-tx">
+        <div className="dialog-message">
+          <div className="dialog-message-icon dialog-message-icon-danger">
             <AlertCircle size={22} aria-hidden="true" />
           </div>
-          <p className="self-center leading-relaxed text-tx-secondary">{importError}</p>
+          <p>{importError}</p>
         </div>
       </Modal>
     </div>

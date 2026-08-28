@@ -31,13 +31,14 @@ export default function ConfirmDialog({
       title={title}
       dismissible={!isPending}
       footer={
-        <div className="flex flex-col-reverse gap-3 sm:flex-row sm:justify-end">
+        <div className="modal-actions">
           <button
             type="button"
             onClick={onClose}
             disabled={isPending}
             autoFocus
-            className="min-h-11 rounded-xl border border-border bg-surface px-5 py-3 font-bold text-tx-secondary transition-colors hover:bg-surface-hover disabled:cursor-not-allowed disabled:opacity-50 sm:min-w-28"
+            data-autofocus
+            className="button button-secondary"
           >
             {cancelLabel}
           </button>
@@ -45,20 +46,18 @@ export default function ConfirmDialog({
             type="button"
             onClick={onConfirm}
             disabled={isPending}
-            className={`min-h-11 rounded-xl px-5 py-3 font-bold text-white shadow-sm transition-colors disabled:cursor-not-allowed disabled:opacity-50 sm:min-w-32 ${
-              danger ? 'bg-danger-btn hover:bg-danger-btn-hover' : 'bg-primary hover:bg-primary-hover'
-            }`}
+            className={`button ${danger ? 'button-danger' : 'button-primary'}`}
           >
             {isPending ? 'Working…' : confirmLabel}
           </button>
         </div>
       }
     >
-      <div className="flex gap-4">
-        <div className={`flex size-11 shrink-0 items-center justify-center rounded-2xl ${danger ? 'bg-danger-bg text-danger-tx' : 'bg-warning-bg text-warning-tx'}`}>
+      <div className="dialog-message">
+        <div className={`dialog-message-icon ${danger ? 'dialog-message-icon-danger' : 'dialog-message-icon-warning'}`}>
           <AlertTriangle size={22} aria-hidden="true" />
         </div>
-        <p className="min-w-0 self-center leading-relaxed text-tx-secondary">{description}</p>
+        <p>{description}</p>
       </div>
     </Modal>
   );

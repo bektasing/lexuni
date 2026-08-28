@@ -1,27 +1,50 @@
-import { useState } from 'react';
+import { useRef, useState } from 'react';
 import { useLiveQuery } from 'dexie-react-hooks';
 import { db } from '../db/db';
 import { Settings as SettingsIcon, Check, Download, Upload, AlertTriangle, ExternalLink, ChevronDown, Snowflake, Sun, Moon, Terminal, MessageCircle, Battery } from 'lucide-react';
 import Modal from '../components/Modal';
-import { useRef } from 'react';
+import { applyTheme, normalizeThemeId } from '../lib/theme';
+import type { SessionAnswer, StudySession, Word, WordGroup } from '../types';
+
+type BackupData = {
+  groups?: WordGroup[];
+  words: Word[];
+  sessions?: StudySession[];
+  sessionAnswers?: SessionAnswer[];
+  preferences?: { theme?: string };
+};
+
+type LexuniBackup = {
+  format: 'lexuni-backup';
+  version: number;
+  exportedAt: string;
+  data: BackupData;
+};
+
+type RestorePreview = {
+  backup: LexuniBackup;
+  date: string;
+  words: number;
+  groups: number;
+  sessionsCompleted: number;
+  sessionsActive: number;
+  theme: string;
+};
 
 const THEMES = [
-  { id: 'arctic', name: 'Arctic', icon: Snowflake, description: 'Clean & crisp', preview: { bg: '#e0f2fe', accent: '#0284c7' } },
-  { id: 'midnight', name: 'Midnight', icon: Moon, description: 'Deep navy', preview: { bg: '#020617', accent: '#0ea5e9' } },
-  { id: 'developer', name: 'Developer', icon: Terminal, description: 'Editor inspired', preview: { bg: '#181818', accent: '#61D9E8' } },
-  { id: 'lingo', name: 'Lingo', icon: MessageCircle, description: 'Bright & playful', preview: { bg: '#f0fdf4', accent: '#22c55e' } },
-  { id: 'battery', name: 'Battery', icon: Battery, description: 'OLED dark', preview: { bg: '#000000', accent: '#4ade80' } },
-  { id: 'sunset', name: 'Sunset', icon: Sun, description: 'Warm & bold', preview: { bg: '#fff7ed', accent: '#ea580c' } },
+  { id: 'arctic', name: 'Arctic', icon: Snowflake, description: 'Light · crisp and cool', tier: 'primary', preview: { bg: '#edf5fa', accent: '#1261a6' } },
+  { id: 'midnight', name: 'Midnight', icon: Moon, description: 'Dark · deep and focused', tier: 'primary', preview: { bg: '#07111f', accent: '#45b6e9' } },
+  { id: 'developer', name: 'Developer', icon: Terminal, description: 'Editor inspired', tier: 'more', preview: { bg: '#17191c', accent: '#67d4de' } },
+  { id: 'lingo', name: 'Lingo', icon: MessageCircle, description: 'Bright and energetic', tier: 'more', preview: { bg: '#eef9ef', accent: '#27a85b' } },
+  { id: 'battery', name: 'Battery', icon: Battery, description: 'OLED minimal', tier: 'more', preview: { bg: '#000000', accent: '#78c895' } },
+  { id: 'sunset', name: 'Sunset', icon: Sun, description: 'Warm and earthy', tier: 'more', preview: { bg: '#f6e7d2', accent: '#b84e2e' } },
 ];
-
 
 function ThemeChip({ preview, compact = false }: { preview: { bg: string, accent: string }, compact?: boolean }) {
   return (
-    <div 
-      className={`rounded-md border border-black/10 shadow-sm overflow-hidden flex shrink-0 ${compact ? 'w-10 h-[22px]' : 'w-12 h-8'}`}
-    >
-      <div className="flex-1" style={{ backgroundColor: preview.bg }} />
-      <div className={`${compact ? 'w-2' : 'w-3'} shrink-0`} style={{ backgroundColor: preview.accent }} />
+    <div className={`theme-chip ${compact ? 'theme-chip-compact' : ''}`}>
+      <div className="theme-chip-background" style={{ backgroundColor: preview.bg }} />
+      <div className="theme-chip-accent" style={{ backgroundColor: preview.accent }} />
     </div>
   );
 }
@@ -33,14 +56,11 @@ export default function Settings() {
   const sessionsCount = useLiveQuery(() => db.sessions.count());
   
   const [activeTheme, setActiveTheme] = useState(() => {
-    let stored = localStorage.getItem('lexuni-theme') || 'arctic';
-    if (['light', 'ocean', 'forest', 'violet'].includes(stored)) stored = 'arctic';
-    if (stored === 'dark') stored = 'midnight';
-    return stored;
+    return normalizeThemeId(localStorage.getItem('lexuni-theme') || 'arctic');
   });
 
   const fileInputRef = useRef<HTMLInputElement>(null);
-  const [restorePreview, setRestorePreview] = useState<any>(null);
+  const [restorePreview, setRestorePreview] = useState<RestorePreview | null>(null);
   const [restoreError, setRestoreError] = useState<string | null>(null);
   const [isRestoring, setIsRestoring] = useState(false);
   const [restoreSuccess, setRestoreSuccess] = useState(false);
@@ -63,7 +83,7 @@ export default function Settings() {
         sessions,
         sessionAnswers,
         preferences: {
-          theme: localStorage.getItem('lexuni-theme') || 'light'
+          theme: normalizeThemeId(localStorage.getItem('lexuni-theme'))
         }
       }
     };
@@ -96,31 +116,31 @@ export default function Settings() {
     reader.onload = (event) => {
       try {
         const text = event.target?.result as string;
-        const json = JSON.parse(text);
+        const json = JSON.parse(text) as Partial<LexuniBackup>;
 
         if (json.format !== "lexuni-backup") {
           setRestoreError("This file is not a valid Lexuni backup.");
           return;
         }
         
-        if (json.version > 1) {
+        if (typeof json.version !== 'number' || json.version > 1) {
           setRestoreError("This backup version is not supported.");
           return;
         }
 
-        if (!json.data || !Array.isArray(json.data.words)) {
+        if (!json.data || !Array.isArray(json.data.words) || typeof json.exportedAt !== 'string') {
           setRestoreError("Missing required structures in backup.");
           return;
         }
 
         setRestorePreview({
-          backup: json,
+          backup: json as LexuniBackup,
           date: json.exportedAt,
           words: json.data.words.length,
           groups: json.data.groups?.length || 0,
-          sessionsCompleted: json.data.sessions?.filter((s: any) => s.status === 'finished' || !s.status).length || 0,
-          sessionsActive: json.data.sessions?.filter((s: any) => s.status === 'active').length || 0,
-          theme: json.data.preferences?.theme || 'light'
+          sessionsCompleted: json.data.sessions?.filter(session => session.status === 'finished' || !session.status).length || 0,
+          sessionsActive: json.data.sessions?.filter(session => session.status === 'active').length || 0,
+          theme: normalizeThemeId(json.data.preferences?.theme)
         });
       } catch {
         setRestoreError("This file is corrupted or not valid JSON.");
@@ -163,18 +183,14 @@ export default function Settings() {
   };
 
   const handleThemeChange = (themeId: string) => {
-    setActiveTheme(themeId);
-    localStorage.setItem('lexuni-theme', themeId);
-    if (themeId === 'arctic') {
-      document.documentElement.removeAttribute('data-theme');
-    } else {
-      document.documentElement.setAttribute('data-theme', themeId);
-    }
+    const normalizedThemeId = applyTheme(themeId);
+    setActiveTheme(normalizedThemeId);
   };
 
   return (
     <div className="page-shell page-enter">
       <header className="page-header">
+        <span className="eyebrow">Make it yours</span>
         <h1>Settings</h1>
         <p>Preferences and app info</p>
       </header>
@@ -189,7 +205,7 @@ export default function Settings() {
           <div className="flex items-center space-x-2">
             <h2>
               <SettingsIcon size={18} />
-              <span>App Theme</span>
+              <span>Appearance</span>
             </h2>
           </div>
           <div className="flex items-center space-x-3">
@@ -208,8 +224,13 @@ export default function Settings() {
           </div>
         </button>
         
-        <div className={`theme-options ${isThemeExpanded ? 'theme-options-open' : ''}`}>
-          {THEMES.map((theme) => {
+        <div
+          className={`theme-options ${isThemeExpanded ? 'theme-options-open' : ''}`}
+          aria-hidden={!isThemeExpanded}
+          inert={!isThemeExpanded}
+        >
+          <p className="theme-tier-label">Primary</p>
+          {THEMES.filter(theme => theme.tier === 'primary').map((theme) => {
             const isActive = activeTheme === theme.id;
             return (
               <button
@@ -235,6 +256,18 @@ export default function Settings() {
               </button>
             );
           })}
+          <p className="theme-tier-label">More</p>
+          {THEMES.filter(theme => theme.tier === 'more').map((theme) => {
+            const isActive = activeTheme === theme.id;
+            return (
+              <button key={theme.id} onClick={() => handleThemeChange(theme.id)} className={`theme-option ${isActive ? 'theme-option-active' : ''}`}>
+                <div className="mr-3"><theme.icon size={20} className="text-tx-secondary" /></div>
+                <div className="flex-1"><h3>{theme.name}</h3><p>{theme.description}</p></div>
+                <div className="mr-1 flex items-center"><ThemeChip preview={theme.preview} /></div>
+                {isActive ? <div className="theme-check"><Check size={14} strokeWidth={3} /></div> : null}
+              </button>
+            );
+          })}
         </div>
       </section>
 
@@ -247,11 +280,11 @@ export default function Settings() {
           </div>
           <div className="settings-row">
             <span className="font-bold text-tx-secondary">Import Groups</span>
-            <span className="text-tx-secondary font-medium">{groupsCount ?? '-'} groups</span>
+            <span className="text-tx-secondary font-medium">{groupsCount ?? '-'} {groupsCount === 1 ? 'group' : 'groups'}</span>
           </div>
           <div className="settings-row">
             <span className="font-bold text-tx-secondary">Total Sessions</span>
-            <span className="text-tx-secondary font-medium">{sessionsCount ?? '-'} sessions</span>
+            <span className="text-tx-secondary font-medium">{sessionsCount ?? '-'} {sessionsCount === 1 ? 'session' : 'sessions'}</span>
           </div>
           <div className="settings-row">
             <span className="font-bold text-tx-secondary">Lexuni Version</span>
@@ -320,7 +353,7 @@ export default function Settings() {
           <button
             type="button"
             onClick={() => setRestoreError(null)}
-            className="min-h-11 w-full rounded-xl bg-primary px-4 py-3 font-bold text-white hover:bg-primary-hover"
+              className="button button-primary button-block"
           >
             Done
           </button>
@@ -346,7 +379,8 @@ export default function Settings() {
               onClick={() => setRestorePreview(null)}
               disabled={isRestoring}
               autoFocus
-              className="min-h-11 flex-1 rounded-xl border border-border bg-surface px-4 py-3 font-bold text-tx-secondary transition-colors hover:bg-surface-hover disabled:cursor-not-allowed disabled:opacity-50"
+              data-autofocus
+              className="button button-secondary"
             >
               Cancel
             </button>
@@ -354,7 +388,7 @@ export default function Settings() {
               type="button"
               onClick={handleConfirmRestore}
               disabled={isRestoring}
-              className="min-h-11 flex-1 rounded-xl bg-danger-btn px-4 py-3 font-bold text-white shadow-sm transition-colors hover:bg-danger-btn-hover disabled:cursor-not-allowed disabled:opacity-50"
+              className="button button-danger"
             >
               {isRestoring ? 'Restoring…' : 'Restore Backup'}
             </button>
@@ -374,9 +408,9 @@ export default function Settings() {
           <div>
             <p className="mb-2 text-sm font-medium text-tx-secondary">Contains:</p>
             <ul className="list-inside list-disc space-y-1 font-medium text-tx">
-              <li>{restorePreview?.words ?? 0} words</li>
-              <li>{restorePreview?.groups ?? 0} import groups</li>
-              <li>{restorePreview?.sessionsCompleted ?? 0} completed sessions</li>
+              <li>{restorePreview?.words ?? 0} {(restorePreview?.words ?? 0) === 1 ? 'word' : 'words'}</li>
+              <li>{restorePreview?.groups ?? 0} import {(restorePreview?.groups ?? 0) === 1 ? 'group' : 'groups'}</li>
+              <li>{restorePreview?.sessionsCompleted ?? 0} completed {(restorePreview?.sessionsCompleted ?? 0) === 1 ? 'session' : 'sessions'}</li>
               {(restorePreview?.sessionsActive ?? 0) > 0 ? (
                 <li className="text-primary">{restorePreview?.sessionsActive} active session</li>
               ) : null}
@@ -384,7 +418,7 @@ export default function Settings() {
             </ul>
           </div>
 
-          <div className="rounded-xl border border-danger-border bg-danger-bg p-4">
+          <div className="restore-warning">
             <p className="text-sm font-bold text-danger-tx">Warning:</p>
             <p className="mt-1 text-sm font-medium text-danger-tx">
               Restoring this backup will permanently replace all current Lexuni data on this device.
@@ -401,7 +435,7 @@ export default function Settings() {
           <button
             type="button"
             onClick={() => setRestoreSuccess(false)}
-            className="min-h-11 w-full rounded-xl bg-primary px-4 py-3 font-bold text-white transition-colors hover:bg-primary-hover"
+            className="button button-primary button-block"
           >
             Done
           </button>

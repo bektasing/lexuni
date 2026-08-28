@@ -23,25 +23,25 @@ export default function Navigation() {
   };
 
 
+  const activeIndex = getActiveIndex();
+
   return (
     <nav className="mobile-nav sm:hidden" aria-label="Primary navigation">
       <div className="mobile-nav-inner">
         <div 
           className="mobile-nav-indicator"
-          style={{ left: `${getActiveIndex() * 20}%` }}
+          style={{ transform: `translateX(${activeIndex * 100}%)` }}
         >
           <div />
         </div>
         
         {navItems.map((item, i) => {
-          const isActive = getActiveIndex() === i;
+          const isActive = activeIndex === i;
           return (
             <NavLink
               key={item.to}
               to={item.to}
-              className={`mobile-nav-link ${
-                isActive ? 'text-primary' : 'text-tx-secondary hover:text-tx'
-              }`}
+              className={`mobile-nav-link ${isActive ? 'mobile-nav-link-active' : ''}`}
               aria-current={isActive ? 'page' : undefined}
             >
               <div>

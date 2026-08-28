@@ -9,13 +9,13 @@ export default defineConfig({
     react(),
     VitePWA({
       registerType: 'autoUpdate',
-      includeAssets: ['favicon.ico', 'apple-touch-icon.png', 'mask-icon.svg'],
+      includeAssets: ['icon.svg'],
       manifest: {
         name: 'Lexuni',
         short_name: 'Lexuni',
         description: 'A fast, local-first English-Turkish vocabulary practice app.',
-        theme_color: '#ffffff',
-        background_color: '#ffffff',
+        theme_color: '#edf5fa',
+        background_color: '#edf5fa',
         display: 'standalone',
         icons: [
           {

@@ -45,6 +45,9 @@ export default function SessionDetail() {
     : 0;
 
   const mistakes = answers.filter(a => !a.correct);
+  const minutes = Math.floor(session.activeDurationSeconds / 60);
+  const seconds = session.activeDurationSeconds % 60;
+  const duration = minutes > 0 ? `${minutes}m ${seconds}s` : `${seconds}s`;
 
   return (
     <div className="page-shell page-enter">
@@ -67,14 +70,16 @@ export default function SessionDetail() {
       </header>
 
       <div className="session-summary-head">
-        <span>Session complete</span>
+        <span className="eyebrow">Session complete</span>
         <h1>
           {session.sourceType === 'all' ? 'All Words' : session.groupName || 'Deleted Group'}
         </h1>
-        <p>
-          {new Date(session.startedAt).toLocaleString('en-US', { 
+        <p className="session-context">
+          <time dateTime={session.startedAt}>{new Date(session.startedAt).toLocaleString('en-US', {
             month: 'short', day: 'numeric', hour: '2-digit', minute: '2-digit' 
-          })}
+          })}</time>
+          <span aria-hidden="true">·</span>
+          <span>{duration}</span>
         </p>
       </div>
 
@@ -113,7 +118,7 @@ export default function SessionDetail() {
         
         {mistakes.length === 0 ? (
           <div className="inline-notice text-success-tx">
-            Perfect session — no mistakes.
+            {session.totalAnswered >= 20 ? 'Perfect session. Quietly legendary.' : 'Perfect session — no mistakes.'}
           </div>
         ) : (
           <div className="mistake-list">

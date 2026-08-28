@@ -26,11 +26,13 @@ export class ErrorBoundary extends Component<Props, State> {
   public render() {
     if (this.state.hasError) {
       return (
-        <div style={{ padding: "20px", color: "red", fontFamily: "monospace" }}>
+        <main className="error-screen">
+          <span className="eyebrow">Lexuni</span>
           <h1>Something went wrong.</h1>
+          <p>Your local vocabulary is safe. Reload the app to try again.</p>
           <pre>{this.state.error?.message}</pre>
-          <pre>{this.state.error?.stack}</pre>
-        </div>
+          <button type="button" className="button button-primary" onClick={() => window.location.reload()}>Reload Lexuni</button>
+        </main>
       );
     }
 

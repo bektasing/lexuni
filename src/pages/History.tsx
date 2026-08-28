@@ -5,6 +5,18 @@ import { Clock, Trash2, ChevronRight } from 'lucide-react';
 import { useState } from 'react';
 import ConfirmDialog from '../components/ConfirmDialog';
 
+function getDateLabel(dateValue: string) {
+  const date = new Date(dateValue);
+  const today = new Date();
+  const startOfToday = new Date(today.getFullYear(), today.getMonth(), today.getDate());
+  const startOfDate = new Date(date.getFullYear(), date.getMonth(), date.getDate());
+  const dayDifference = Math.round((startOfToday.getTime() - startOfDate.getTime()) / 86_400_000);
+
+  if (dayDifference === 0) return 'Today';
+  if (dayDifference === 1) return 'Yesterday';
+  return date.toLocaleDateString('en-US', { weekday: 'long', month: 'long', day: 'numeric' });
+}
+
 export default function History() {
   const navigate = useNavigate();
   const sessions = useLiveQuery(() => db.sessions.where('status').equals('finished').toArray());
@@ -27,14 +39,20 @@ export default function History() {
 
   if (!sessions) return null;
 
-  const sortedSessions = sessions.sort((a, b) => b.startedAt.localeCompare(a.startedAt));
+  const sortedSessions = [...sessions].sort((a, b) => b.startedAt.localeCompare(a.startedAt));
+  const sessionsByDate = sortedSessions.reduce<Record<string, typeof sessions>>((groups, session) => {
+    const label = getDateLabel(session.startedAt);
+    (groups[label] ||= []).push(session);
+    return groups;
+  }, {});
 
   return (
     <div className="page-shell page-enter">
       <header className="page-header flex items-end justify-between gap-4">
         <div>
+          <span className="eyebrow">Activity log</span>
           <h1>History</h1>
-          <p>{sessions.length} sessions completed</p>
+          <p>{sessions.length} {sessions.length === 1 ? 'session' : 'sessions'} completed</p>
         </div>
         
         {sessions.length > 0 && (
@@ -57,8 +75,12 @@ export default function History() {
           <p>No practice history yet.</p>
         </div>
       ) : (
-        <div className="history-list">
-          {sortedSessions.map(session => {
+        <div className="history-groups">
+          {Object.entries(sessionsByDate).map(([dateLabel, dateSessions]) => (
+            <section key={dateLabel} className="history-group" aria-labelledby={`history-${dateLabel.replace(/\s+/g, '-').toLowerCase()}`}>
+              <h2 id={`history-${dateLabel.replace(/\s+/g, '-').toLowerCase()}`} className="history-date">{dateLabel}</h2>
+              <div className="history-list">
+              {dateSessions.map(session => {
             const accuracy = session.totalAnswered > 0 
               ? Math.round((session.correctCount / session.totalAnswered) * 100) 
               : 0;
@@ -67,8 +89,8 @@ export default function History() {
             const seconds = session.activeDurationSeconds % 60;
             const durationStr = minutes > 0 ? `${minutes}m ${seconds}s` : `${seconds}s`;
             
-            const dateStr = new Date(session.startedAt).toLocaleString('en-US', {
-              month: 'short', day: 'numeric', hour: '2-digit', minute: '2-digit'
+            const timeStr = new Date(session.startedAt).toLocaleTimeString('en-US', {
+              hour: '2-digit', minute: '2-digit'
             });
 
             return (
@@ -78,7 +100,7 @@ export default function History() {
                 className="history-row"
               >
                 <div>
-                  <time>{dateStr}</time>
+                  <time dateTime={session.startedAt}>{timeStr}</time>
                   <h3>
                     {session.sourceType === 'all' ? 'All Words' : session.groupName || 'Deleted Group'}
                   </h3>
@@ -91,7 +113,10 @@ export default function History() {
                 <ChevronRight className="text-tx-muted" />
               </button>
             );
-          })}
+              })}
+              </div>
+            </section>
+          ))}
         </div>
       )}
 

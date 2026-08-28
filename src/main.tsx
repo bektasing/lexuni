@@ -3,14 +3,9 @@ import { createRoot } from 'react-dom/client';
 import './index.css';
 import App from './App.tsx';
 import { ErrorBoundary } from './ErrorBoundary.tsx';
+import { applyTheme } from './lib/theme.ts';
 
-let savedTheme = localStorage.getItem('lexuni-theme') || 'arctic';
-if (['light', 'ocean', 'forest', 'violet'].includes(savedTheme)) savedTheme = 'arctic';
-if (savedTheme === 'dark') savedTheme = 'midnight';
-
-if (savedTheme !== 'arctic') {
-  document.documentElement.setAttribute('data-theme', savedTheme);
-}
+applyTheme(localStorage.getItem('lexuni-theme'));
 
 createRoot(document.getElementById('root')!).render(
   <StrictMode>

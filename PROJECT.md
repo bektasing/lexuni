@@ -7,16 +7,16 @@ Lexuni is a fast, local-first English-Turkish vocabulary practice web app. It is
 - Vocabulary is organized into simple import groups.
 - Groups represent import batches and can be merged via "Merge Imports" top-level button.
 - Bulk deletion is supported via multi-select modes, but hidden in standard group lists for cleanliness.
-- Practice uses random bidirectional questions (English ↔ Turkish).
+- Practice alternates English → Turkish and Turkish → English questions for balanced coverage.
 - Each question has 4 multiple-choice options.
-- Correct answers highlight in green and automatically advance after a very brief pause (~400ms).
-- Wrong answers clearly reveal the correct answer in green, highlight the wrong selection in red, and require a deliberate "Tap to Continue" interaction before proceeding.
+- Correct answers highlight in green and automatically advance after a brief feedback beat (~540ms).
+- Wrong answers clearly reveal the correct answer in green, highlight the wrong selection in red, and require a deliberate Continue action before proceeding.
 - Wrong answers are reinforced later in the cycle.
 - A shuffle-bag algorithm prevents excessive repetition and ensures fair coverage.
 - Practice happens within Study Sessions that persist until explicitly finished.
 - Only one session can be active at a time.
 - Time spent away from the Practice screen automatically pauses the session timer.
-- App styling supports a robust 5-color local-first Theme System (Light, Dark, Ocean, Forest, Sunset).
+- App styling supports six local themes. Arctic and Midnight are the flagship themes; Developer, Lingo, Battery, and Sunset are distinct alternatives.
 - Imported words, session history, and selected theme persist locally.
 - Import uses Lexuni's simple custom text format with `# Group Name`.
 
@@ -24,8 +24,7 @@ Lexuni is a fast, local-first English-Turkish vocabulary practice web app. It is
 - React
 - TypeScript
 - Vite
-- Tailwind CSS v4 (Using custom `@theme` semantic tokens like `--color-bg`, `--color-surface`, `--color-primary` in `index.css`)
-- Zustand (used minimally)
+- Tailwind CSS v4 with semantic CSS tokens in `index.css`
 - Dexie.js / IndexedDB
 - PWA Implementation (`vite-plugin-pwa`)
 
@@ -80,12 +79,13 @@ export type StudySession = {
 
 ## Practice Logic
 - A session exists until the user explicitly finishes it.
-- Bidirectional: mixes English → Turkish and Turkish → English questions randomly.
+- Bidirectional: alternates English → Turkish and Turkish → English questions, with a stable initial direction per session.
 - A shuffle-bag queue guarantees every word is tested before heavy repetition.
 - 3 incorrect options are drawn randomly from the active vocabulary pool, keeping the UI exactly at 4 options.
-- Correct answers: smooth UI feedback + auto-advance.
+- Correct answers: varied, non-repeating feedback plus smooth auto-advance.
 - Wrong answers: stops timer + visual correction + deliberate user progression.
 - Wrong answers inject the failed word slightly later in the queue (reinforcement).
+- Rare and contextual personality messages are isolated in `src/lib/practiceFeedback.ts`; they never change scoring, queues, or timing.
 - Real practice duration is paused automatically when the user leaves the Practice screen or pauses for a wrong answer.
 - Active sessions are protected against group deletion/merging until they are finished.
 
@@ -118,12 +118,11 @@ npm run preview
 - Groups renaming via simple modal UI.
 - Practice mode with multiple-choice questions.
 - Typography-first Home overview with lightweight statistics and a dedicated active-session panel.
-- Export to `.txt` vocabulary backup file.
+- Export vocabulary as text and export the complete app state as a portable JSON backup.
 - Full Manual JSON Backup & Restore (portable persistent sessions, queues, stats, preferences).
 - PWA installable.
 
 ## Future Ideas
-- Turkish → English mode
 - Mistake-focused practice
 - Spaced repetition
 - Cloud sync (optional, keeping local-first focus)
@@ -144,6 +143,7 @@ npm run preview
 - Groups, vocabulary, history, and settings use lightweight rows and separators rather than repeated bordered cards.
 - Practice intentionally strips the interface back to session stats, the current word, four answers, and strong feedback states.
 - Shared CSS primitives define buttons, fields, icon actions, page rhythm, list rows, and a compact radius scale.
+- Navigation and modals remain shared components so route state, focus behavior, and mobile/desktop structure stay consistent.
 
 ## Theming and Motion (v3.1)
 
@@ -156,7 +156,7 @@ Lexuni supports 6 highly distinct themes using a strict CSS variable semantic to
 5. **Battery** - OLED black. True black background, restrained muted green accent, dark cards.
 6. **Sunset** - Terracotta warm. Warm sand/peach background, beige/clay cards, burnt orange accent.
 
-Each theme guarantees readability by redefining colors like `--bg`, `--surface`, `--tx`, `--primary`, and `--nav-active`. Semantic learning feedback colors (`--success-*`, `--danger-*`) remain globally consistent across all themes to preserve learning integrity. Special highly-visible components like the Home screen "Session in Progress" panel use dedicated semantic tokens (e.g., `--session-bg`, `--session-btn`) to maintain theme-native visual hierarchy.
+Each theme guarantees readability by redefining semantic colors such as `--bg`, `--surface`, `--tx`, `--primary`, and `--nav-active`. Semantic learning feedback colors (`--success-*`, `--danger-*`) remain consistent across themes to preserve learning integrity. High-priority UI such as the Home screen active-session panel uses dedicated semantic tokens to maintain theme-native hierarchy.
 
 ### Static Palette Previews
 In `Settings.tsx`, each theme defines static `preview` colors (`{ bg, accent }`). These render as clean, 2-color mini UI chips alongside a simple Lucide icon, completely replacing the old messy multi-dot palettes. Persisted preferences from legacy themes (Ocean, Forest, Violet) safely auto-migrate to Arctic on startup.
@@ -166,4 +166,10 @@ The app utilizes lightweight, premium motion:
 - **Mobile Navigation**: A single shared, symmetrical indicator pill smoothly translates (`left` percentage interpolation) across the bottom navigation to follow the active tab, avoiding flicker.
 - **Micro-Interactions**: Shared controls use quick, property-specific color transitions and subtle press feedback. Frequent list interactions remain quiet.
 - **Page Entrances**: A fast `.page-enter` animation fades and slides content up slightly when navigating major routes.
-- **Reduced Motion**: All animations strictly respect OS-level `prefers-reduced-motion: reduce` settings using Tailwind's `motion-safe:` modifier or simplified keyframe fallbacks.
+- **Reduced Motion**: `prefers-reduced-motion: reduce` removes non-essential transforms and animations while preserving immediate state feedback.
+
+## PWA Appearance
+
+- The document, manifest, and default browser theme color use Arctic's background to reduce startup flash.
+- Runtime theme changes update the browser theme color through the shared theme helper.
+- The install manifest uses the maintained `public/icon.svg` asset for standard and maskable entries.

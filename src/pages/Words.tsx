@@ -237,17 +237,17 @@ export default function Words() {
         <button
           type="button"
           onClick={() => setAlertMessage(null)}
-          className="min-h-11 w-full rounded-xl bg-primary px-4 py-3 font-bold text-white hover:bg-primary-hover"
+          className="button button-primary button-block"
         >
           Done
         </button>
       }
     >
-      <div className="flex gap-4">
-        <div className="flex size-11 shrink-0 items-center justify-center rounded-2xl bg-warning-bg text-warning-tx">
+      <div className="dialog-message">
+        <div className="dialog-message-icon dialog-message-icon-warning">
           <AlertTriangle size={22} aria-hidden="true" />
         </div>
-        <p className="self-center leading-relaxed text-tx-secondary">{alertMessage}</p>
+        <p>{alertMessage}</p>
       </div>
     </Modal>
   );
@@ -265,35 +265,36 @@ export default function Words() {
               className="text-action mb-3 -ml-1"
             >
               <ChevronLeft size={20} />
-              <span>Back</span>
+              <span>Vocabulary</span>
             </button>
+            <span className="eyebrow">Import group</span>
             <h1 className="break-words">{selectedGroup.name}</h1>
             <p>{groupWords.length} words</p>
           </div>
-          <div className="flex items-center space-x-2 shrink-0">
+          <div className="group-detail-actions">
             <button
               onClick={handleExport}
-              className="icon-button"
+              className="button button-quiet group-detail-action"
               title="Export Backup"
               aria-label="Export group"
             >
-              <Download size={20} />
+              <Download size={18} /><span>Export</span>
             </button>
             <button
               onClick={() => { setIsEditingGroup(true); setGroupNameInput(selectedGroup.name); }}
-              className="icon-button"
+              className="button button-quiet group-detail-action"
               title="Rename Group"
               aria-label="Rename group"
             >
-              <Edit2 size={20} />
+              <Edit2 size={18} /><span>Rename</span>
             </button>
             <button
               onClick={() => setDeleteGroupConfirmId(selectedGroup.id)}
-              className="icon-button icon-button-danger"
+              className="button button-quiet button-quiet-danger group-detail-action"
               title="Delete Import"
               aria-label="Delete group"
             >
-              <Trash2 size={20} />
+              <Trash2 size={18} /><span>Delete</span>
             </button>
           </div>
         </header>
@@ -303,11 +304,11 @@ export default function Words() {
           onClose={() => setIsEditingGroup(false)}
           title="Rename Group"
           footer={
-            <div className="flex flex-col-reverse gap-3 sm:flex-row">
+            <div className="modal-actions">
               <button
                 type="button"
                 onClick={() => setIsEditingGroup(false)}
-                className="min-h-11 flex-1 rounded-xl border border-border bg-surface px-4 py-3 font-bold text-tx-secondary hover:bg-surface-hover"
+                className="button button-secondary"
               >
                 Cancel
               </button>
@@ -315,7 +316,7 @@ export default function Words() {
                 type="button"
                 onClick={handleSaveGroupName}
                 disabled={!groupNameInput.trim()}
-                className="min-h-11 flex-1 rounded-xl bg-primary px-4 py-3 font-bold text-white hover:bg-primary-hover disabled:cursor-not-allowed disabled:opacity-50"
+                className="button button-primary"
               >
                 Save
               </button>
@@ -325,15 +326,16 @@ export default function Words() {
           <div className="space-y-4">
             <div>
               <label className="block text-sm font-bold text-tx-secondary mb-2">Current name:</label>
-              <div className="text-tx font-medium bg-bg p-3 rounded-xl border border-border">{selectedGroup.name}</div>
+              <div className="field readonly-field">{selectedGroup.name}</div>
             </div>
             <div>
-              <label className="block text-sm font-bold text-tx-secondary mb-2">New name:</label>
+              <label htmlFor="rename-group" className="block text-sm font-bold text-tx-secondary mb-2">New name:</label>
               <input
+                id="rename-group"
                 type="text"
                 value={groupNameInput}
                 onChange={(e) => setGroupNameInput(e.target.value)}
-                className="w-full px-4 py-3 bg-bg rounded-xl outline-none focus:ring-2 focus:ring-primary border border-border"
+                className="field"
                 autoFocus
                 onKeyDown={(e) => e.key === 'Enter' && handleSaveGroupName()}
               />
@@ -343,8 +345,10 @@ export default function Words() {
 
         <div className="word-toolbar">
           <div className="relative flex-1">
-            <Search className="absolute left-3 top-1/2 -translate-y-1/2 text-tx-muted" size={20} />
+            <label htmlFor="word-search" className="sr-only">Search this group</label>
+            <Search className="absolute left-3 top-1/2 -translate-y-1/2 text-tx-muted" size={20} aria-hidden="true" />
             <input
+              id="word-search"
               type="text"
               placeholder="Search words..."
               value={search}
@@ -353,6 +357,7 @@ export default function Words() {
             />
           </div>
           <select
+            aria-label="Sort words"
             value={sort}
             onChange={e => setSort(e.target.value as any)}
             className="field sm:w-auto font-medium text-tx-secondary cursor-pointer"
@@ -370,6 +375,7 @@ export default function Words() {
               setTrInput('');
             }}
             className="button button-primary"
+            aria-label="Add word"
           >
             <Plus size={20} />
             <span className="hidden sm:inline">Add Word</span>
@@ -400,6 +406,7 @@ export default function Words() {
                 <button
                   onClick={handleSaveWord}
                   className="button button-primary flex-1 sm:flex-none"
+                  aria-label={editingId ? 'Save word changes' : 'Add word'}
                 >
                   <Check size={20} />
                 </button>
@@ -409,6 +416,7 @@ export default function Words() {
                     setEditingId(null);
                   }}
                   className="button button-secondary flex-1 sm:flex-none"
+                  aria-label="Cancel word editor"
                 >
                   <X size={20} />
                 </button>
@@ -420,16 +428,16 @@ export default function Words() {
         <div className="word-list">
           {filteredAndSortedWords.map(word => (
             <div key={word.id} className="word-row group">
-              <div className="flex-1">
+              <div className="word-copy">
                 <div className="word-primary">{word.english}</div>
                 <div className="word-translation">{word.turkish}</div>
-                <div className="word-stats">
-                  <span className="text-success-tx">✓ {word.correctCount}</span>
-                  <span className="text-danger-tx">✗ {word.wrongCount}</span>
-                </div>
               </div>
-              
-              <div className="flex items-center space-x-1 sm:opacity-0 group-hover:opacity-100 transition-opacity">
+              <div className="word-trailing">
+                <div className="word-stats" aria-label={`${word.correctCount} correct, ${word.wrongCount} wrong`}>
+                  <span className="text-success-tx"><strong>{word.correctCount}</strong> ✓</span>
+                  <span className="text-danger-tx"><strong>{word.wrongCount}</strong> ×</span>
+                </div>
+              <div className="word-actions">
                 <button
                   onClick={() => {
                     setEditingId(word.id);
@@ -450,6 +458,7 @@ export default function Words() {
                 >
                   <Trash2 size={18} />
                 </button>
+              </div>
               </div>
             </div>
           ))}
@@ -506,9 +515,10 @@ export default function Words() {
     <div className="page-shell page-enter">
       <header className="page-header flex flex-col sm:flex-row sm:items-end justify-between gap-5">
         <div>
+          <span className="eyebrow">Your library</span>
           <h1>Vocabulary</h1>
           <p>
-            {words?.length || 0} words &middot; {groups?.length || 0} imports
+            {words?.length || 0} {(words?.length || 0) === 1 ? 'word' : 'words'} &middot; {groups?.length || 0} {(groups?.length || 0) === 1 ? 'import' : 'imports'}
           </p>
         </div>
         <div className="flex gap-2">
@@ -526,7 +536,7 @@ export default function Words() {
             className="button button-primary"
           >
             <Import size={18} />
-            <span>Import Words</span>
+            <span>Import</span>
           </button>
         </div>
       </header>
@@ -537,7 +547,7 @@ export default function Words() {
             <h3 className="font-bold text-primary text-lg">Merge Imports</h3>
             <button
               onClick={cancelMerge}
-              className="p-2 bg-surface text-tx-secondary rounded-lg hover:bg-surface-hover"
+              className="icon-button"
               aria-label="Cancel merge"
             >
               <X size={20} />
@@ -546,19 +556,21 @@ export default function Words() {
           <p className="text-sm text-primary mb-4 font-medium">Select 2 or more groups to merge them together.</p>
           
           {selectedGroupIds.size >= 2 && (
-            <div className="flex flex-col sm:flex-row gap-3 mb-2 animate-in fade-in slide-in-from-top-2">
+            <div className="merge-ready">
+              <label htmlFor="merge-group-name" className="sr-only">Merged group name</label>
               <input
+                id="merge-group-name"
                 type="text"
                 placeholder="New merged group name"
                 value={mergeNameInput}
                 onChange={e => setMergeNameInput(e.target.value)}
-                className="flex-1 px-4 py-3 rounded-xl outline-none focus:ring-2 focus:ring-primary border border-primary-soft"
+                className="field"
                 autoFocus
               />
               <button
                 onClick={handleMergeGroups}
                 disabled={!mergeNameInput.trim()}
-                className="flex-1 sm:flex-none flex items-center justify-center bg-primary text-white font-bold px-6 py-3 rounded-xl disabled:opacity-50 disabled:cursor-not-allowed"
+                className="button button-primary"
               >
                 Confirm Merge
               </button>
@@ -568,7 +580,7 @@ export default function Words() {
       )}
 
       <div className="group-list">
-        {groups?.sort((a, b) => b.createdAt.localeCompare(a.createdAt)).map(group => {
+        {[...(groups ?? [])].sort((a, b) => b.createdAt.localeCompare(a.createdAt)).map(group => {
           const groupWordCount = words?.filter(w => w.groupId === group.id).length || 0;
           const isSelected = selectedGroupIds.has(group.id);
           
@@ -577,37 +589,52 @@ export default function Words() {
               key={group.id} 
               className={`group-row ${isSelected ? 'group-row-selected' : ''}`}
               onClick={isMerging ? () => toggleGroupSelection(group.id) : undefined}
+              onKeyDown={isMerging ? event => {
+                if (event.key === 'Enter' || event.key === ' ') {
+                  event.preventDefault();
+                  toggleGroupSelection(group.id);
+                }
+              } : undefined}
+              role={isMerging ? 'checkbox' : undefined}
+              aria-checked={isMerging ? isSelected : undefined}
+              tabIndex={isMerging ? 0 : undefined}
             >
-              <div className="flex items-center space-x-4 flex-1">
+              <div className="group-row-content">
                 {isMerging && (
                   <input
                     type="checkbox"
+                    aria-label={`Select ${group.name}`}
                     checked={isSelected}
                     onChange={() => toggleGroupSelection(group.id)}
                     className="w-5 h-5 rounded border-border-strong text-primary focus:ring-primary cursor-pointer shrink-0"
                     onClick={e => e.stopPropagation()}
                   />
                 )}
-                <div className={`flex-1 ${isMerging ? 'cursor-pointer' : ''}`}>
-                  <h2>{group.name}</h2>
-                  <p>{groupWordCount} words</p>
-                </div>
-              </div>
-
-              {!isMerging && (
-                <div className="flex items-center gap-2">
+                {isMerging ? (
+                  <div className="group-row-copy"><h2>{group.name}</h2><p>{groupWordCount} words</p></div>
+                ) : (
                   <button
+                    type="button"
                     onClick={() => {
                       setSelectedGroupId(group.id);
                       navigate(`/words?groupId=${encodeURIComponent(group.id)}`, { replace: true });
                     }}
-                    className="button button-quiet flex-1 sm:flex-none"
+                    className="group-row-main"
+                    aria-label={`Open ${group.name}`}
                   >
-                    View
+                    <span className="group-row-copy"><strong>{group.name}</strong><small>{groupWordCount} words</small></span>
+                    <span className="group-row-open" aria-hidden="true">Open →</span>
                   </button>
+                )}
+              </div>
+
+              {!isMerging && (
+                <div className="group-row-actions">
                   <button
                     onClick={() => navigate(`/practice?source=group&groupId=${group.id}`)}
-                    className="button button-quiet text-primary flex-1 sm:flex-none"
+                    disabled={groupWordCount < 4}
+                    className="button button-quiet group-practice"
+                    title={groupWordCount < 4 ? 'At least four words are required' : `Practice ${group.name}`}
                   >
                     <Play size={16} fill="currentColor" />
                     <span>Practice</span>

@@ -56,8 +56,9 @@ export default function App() {
   return (
     <Router>
       <div className="app-frame">
+        <a className="skip-link" href="#main-content">Skip to content</a>
         <Sidebar />
-        <main className="app-main">
+        <main id="main-content" className="app-main" tabIndex={-1}>
           <Routes>
             <Route path="/" element={<Home />} />
             <Route path="/practice" element={<Practice />} />

@@ -25,6 +25,7 @@ export default function Home() {
     return (
       <div className="page-shell page-enter">
         <header className="brand-header">
+          <span className="eyebrow">Your words. Your pace.</span>
           <h1>Lexuni</h1>
           <p>Vocabulary Practice</p>
         </header>
@@ -68,29 +69,31 @@ export default function Home() {
   return (
     <div className="page-shell home-page page-enter">
       <header className="brand-header">
+        <span className="eyebrow">Your words. Your pace.</span>
         <h1>Lexuni</h1>
         <p>Vocabulary Practice</p>
       </header>
 
-      <section className="home-overview" aria-label="Vocabulary overview">
-        <div className="home-total">
-          <strong>{totalWords}</strong>
-          <span>words in your vocabulary</span>
-          {groupsCount !== undefined && <small>{groupsCount} imports</small>}
-        </div>
+      <div className="home-dashboard">
+        <section className="home-overview" aria-label="Vocabulary overview">
+          <div className="home-total">
+            <strong>{totalWords}</strong>
+            <span>words in your vocabulary</span>
+            {groupsCount !== undefined && <small>{groupsCount} {groupsCount === 1 ? 'import' : 'imports'}</small>}
+          </div>
 
-        <div className="stat-line">
-          <div><strong className="text-success-tx">{correct}</strong><span>correct</span></div>
-          <div><strong className="text-danger-tx">{wrong}</strong><span>wrong</span></div>
-          <div><strong className="text-primary">{accuracy}%</strong><span>accuracy</span></div>
-        </div>
-      </section>
+          <div className="stat-line">
+            <div><strong className="text-success-tx">{correct}</strong><span>correct</span></div>
+            <div><strong className="text-danger-tx">{wrong}</strong><span>wrong</span></div>
+            <div><strong className="text-primary">{accuracy}%</strong><span>accuracy</span></div>
+          </div>
+        </section>
 
-      {activeSession ? (
-        <section className="session-panel">
+        {activeSession ? (
+          <section className="session-panel">
           <div className="session-panel-head">
             <div>
-              <div className="session-kicker"><span />Session in progress</div>
+              <div className="session-kicker"><span />Continue learning</div>
               <h2>{activeSession.sourceType === 'all' ? 'All Words' : activeSession.groupName || 'Practice'}</h2>
             </div>
             <div className="session-metrics">
@@ -106,9 +109,9 @@ export default function Home() {
               Finish
             </button>
           </div>
-        </section>
-      ) : lastSession ? (
-        <button onClick={() => navigate(`/session/${lastSession.id}`)} className="last-session-row">
+          </section>
+        ) : lastSession ? (
+          <button onClick={() => navigate(`/session/${lastSession.id}`)} className="last-session-row">
           <div>
             <span>Last session</span>
             <strong>{lastSession.sourceType === 'all' ? 'All Words' : lastSession.groupName || 'Practice'}</strong>
@@ -117,12 +120,18 @@ export default function Home() {
             <span><strong>{lastSession.totalAnswered}</strong> answered · {lastSession.totalAnswered > 0 ? Math.round((lastSession.correctCount / lastSession.totalAnswered) * 100) : 0}%</span>
             <ArrowRight size={17} />
           </div>
-        </button>
-      ) : null}
+          </button>
+        ) : (
+          <section className="home-prompt">
+            <span className="eyebrow">Ready when you are</span>
+            <h2>Make a few words stick.</h2>
+            <p>Short sessions are the point. Start, focus, and leave when you’re done.</p>
+          </section>
+        )}
 
-      <section className="home-actions">
-        {!activeSession && (
-          <>
+        <section className="home-actions">
+          {!activeSession ? (
+            <>
             <button
               onClick={() => navigate('/practice')}
               disabled={!canPractice}
@@ -132,17 +141,18 @@ export default function Home() {
               Start Practice
             </button>
             {!canPractice && <p className="practice-requirement">At least 4 words are required to start practice.</p>}
-          </>
-        )}
-        <div className="secondary-links">
-          <button onClick={() => navigate('/words/import')} className="text-action">
-            <span>Import words</span><ArrowRight size={16} />
-          </button>
-          <button onClick={() => navigate('/words')} className="text-action">
-            <span>Browse vocabulary</span><ArrowRight size={16} />
-          </button>
-        </div>
-      </section>
+            </>
+          ) : null}
+          <div className="secondary-links">
+            <button onClick={() => navigate('/words/import')} className="text-action">
+              <span>Import words</span><ArrowRight size={16} />
+            </button>
+            <button onClick={() => navigate('/words')} className="text-action">
+              <span>Browse vocabulary</span><ArrowRight size={16} />
+            </button>
+          </div>
+        </section>
+      </div>
 
       <ConfirmDialog
         isOpen={finishConfirmOpen}
