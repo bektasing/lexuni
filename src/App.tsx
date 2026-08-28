@@ -68,6 +68,7 @@ export default function App() {
             <Route path="/history" element={<History />} />
             <Route path="/session/:id" element={<SessionDetail />} />
             <Route path="/settings" element={<SettingsPage />} />
+            <Route path="*" element={<Navigate to="/" replace />} />
           </Routes>
         </main>
         <Navigation />

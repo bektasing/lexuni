@@ -9,15 +9,15 @@ export default function SessionDetail() {
   const { id } = useParams<{ id: string }>();
   const navigate = useNavigate();
   
-  const session = useLiveQuery(() => id ? db.sessions.get(id) : undefined, [id]);
+  const session = useLiveQuery(() => id ? db.sessions.get(id) : undefined, [id], null);
   const answers = useLiveQuery(() => id ? db.sessionAnswers.where({ sessionId: id }).toArray() : [], [id]);
 
   const [deleteConfirm, setDeleteConfirm] = useState(false);
   const [isDeleting, setIsDeleting] = useState(false);
 
   if (!id) return null;
-  if (session === undefined || answers === undefined) return null; // loading
-  if (session === null) {
+  if (session === null || answers === undefined) return null;
+  if (session === undefined) {
     return (
       <div className="p-6 text-center text-tx-secondary mt-20">
         Session not found.
@@ -117,8 +117,12 @@ export default function SessionDetail() {
         <h2 className="section-title">Mistakes</h2>
         
         {mistakes.length === 0 ? (
-          <div className="inline-notice text-success-tx">
-            {session.totalAnswered >= 20 ? 'Perfect session. Quietly legendary.' : 'Perfect session — no mistakes.'}
+          <div className={`inline-notice ${session.totalAnswered > 0 ? 'text-success-tx' : 'text-tx-secondary'}`}>
+            {session.totalAnswered === 0
+              ? 'No answers were recorded.'
+              : session.totalAnswered >= 20
+                ? 'Perfect session. Quietly legendary.'
+                : 'Perfect session — no mistakes.'}
           </div>
         ) : (
           <div className="mistake-list">

@@ -17,6 +17,7 @@ type BackupData = {
 type LexuniBackup = {
   format: 'lexuni-backup';
   version: number;
+  appVersion?: string;
   exportedAt: string;
   data: BackupData;
 };
@@ -30,6 +31,8 @@ type RestorePreview = {
   sessionsActive: number;
   theme: string;
 };
+
+const APP_VERSION = '1.0.0';
 
 const THEMES = [
   { id: 'arctic', name: 'Arctic', icon: Snowflake, description: 'Light · crisp and cool', tier: 'primary', preview: { bg: '#edf5fa', accent: '#1261a6' } },
@@ -76,7 +79,7 @@ export default function Settings() {
       format: "lexuni-backup",
       version: 1,
       exportedAt: new Date().toISOString(),
-      appVersion: "3.0.0",
+      appVersion: APP_VERSION,
       data: {
         groups,
         words,
@@ -288,7 +291,7 @@ export default function Settings() {
           </div>
           <div className="settings-row">
             <span className="font-bold text-tx-secondary">Lexuni Version</span>
-            <span className="text-tx-secondary font-medium">3.0.0</span>
+            <span className="text-tx-secondary font-medium">{APP_VERSION}</span>
           </div>
         </div>
       </section>

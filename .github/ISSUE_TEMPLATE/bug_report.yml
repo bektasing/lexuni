@@ -1,0 +1,67 @@
+name: Bug report
+description: Report a reproducible problem in Lexuni
+title: "[Bug]: "
+body:
+  - type: markdown
+    attributes:
+      value: |
+        Thanks for helping improve Lexuni. Please do not attach private vocabulary or backup files; use redacted examples when data is relevant.
+  - type: textarea
+    id: description
+    attributes:
+      label: Description
+      description: What happened?
+      placeholder: Describe the problem clearly and concisely.
+    validations:
+      required: true
+  - type: textarea
+    id: reproduction
+    attributes:
+      label: Steps to reproduce
+      description: List the smallest sequence that reliably shows the problem.
+      placeholder: |
+        1. Open ...
+        2. Select ...
+        3. See ...
+    validations:
+      required: true
+  - type: textarea
+    id: expected
+    attributes:
+      label: Expected behavior
+      description: What did you expect to happen?
+    validations:
+      required: true
+  - type: input
+    id: environment
+    attributes:
+      label: Browser and device
+      description: Include browser version, operating system, and device type.
+      placeholder: Firefox 128, Android 15, Pixel 8
+    validations:
+      required: true
+  - type: dropdown
+    id: theme
+    attributes:
+      label: Theme
+      description: Select the active theme if the issue is visual.
+      options:
+        - Not relevant
+        - Arctic
+        - Midnight
+        - Developer
+        - Lingo
+        - Battery
+        - Sunset
+  - type: textarea
+    id: screenshots
+    attributes:
+      label: Screenshots or additional context
+      description: Add screenshots or redacted details only when they help explain the issue.
+  - type: checkboxes
+    id: privacy
+    attributes:
+      label: Privacy check
+      options:
+        - label: I have removed private vocabulary, backup data, and credentials from this report.
+          required: true

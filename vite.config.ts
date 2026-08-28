@@ -14,9 +14,13 @@ export default defineConfig({
         name: 'Lexuni',
         short_name: 'Lexuni',
         description: 'A fast, local-first English-Turkish vocabulary practice app.',
+        lang: 'en',
+        start_url: '/',
+        scope: '/',
         theme_color: '#edf5fa',
         background_color: '#edf5fa',
         display: 'standalone',
+        categories: ['education', 'productivity'],
         icons: [
           {
             src: 'icon.svg',

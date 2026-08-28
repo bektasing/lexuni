@@ -104,9 +104,13 @@ export type StudySession = {
 - Active sessions survive backup and restore seamlessly.
 
 ## Commands
+
+Node.js 22.12 or newer is required. Development and CI use Node 24.
+
 ```bash
-npm install
+npm ci
 npm run dev
+npm run lint
 npm run build
 npm run preview
 ```

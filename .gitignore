@@ -12,11 +12,33 @@ dist
 dist-ssr
 *.local
 
+# Environment and local service configuration
+.env
+.env.*
+!.env.example
+.vercel
+
+# Test and tooling output
+coverage
+.vite
+.cache
+playwright-report
+test-results
+
+# Temporary and exported local data
+*.bak
+*.tmp
+*.orig
+*~
+lexuni-backup-*
+
 # Editor directories and files
 .vscode/*
 !.vscode/extensions.json
 .idea
 .DS_Store
+Thumbs.db
+Desktop.ini
 *.suo
 *.ntvs*
 *.njsproj

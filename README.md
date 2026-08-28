@@ -1,64 +1,110 @@
 # Lexuni
 
-Lexuni is a fast, local-first English-Turkish vocabulary practice web app. It's designed for simple, quick, repeated use on mobile devices to help users learn and retain vocabulary effectively.
+**Lexuni is a local-first vocabulary trainer for learning the English words you actually care about.**
+
+## Overview
+
+Traditional language apps often spend time on words you already know. Lexuni lets you import your own English–Turkish vocabulary and practice only that personal vocabulary pool. It runs entirely in the browser and requires no account or backend.
+
+## Screenshots
+
+<p align="center">
+  <img src="docs/screenshots/practice-arctic.png" alt="Lexuni Practice screen in the Arctic theme" width="49%">
+  <img src="docs/screenshots/practice-midnight.png" alt="Lexuni Practice screen in the Midnight theme" width="49%">
+</p>
+<p align="center"><sub>Practice — Arctic and Midnight</sub></p>
+
+<p align="center">
+  <img src="docs/screenshots/vocabulary-midnight.png" alt="Lexuni vocabulary groups in the Midnight theme" width="49%">
+  <img src="docs/screenshots/import-preview-midnight.png" alt="Lexuni vocabulary import preview in the Midnight theme" width="49%">
+</p>
+<p align="center"><sub>Vocabulary library and import preview</sub></p>
 
 ## Features
 
-- **Import Groups**: Organize, rename, or merge vocabulary batches easily.
-- **Study Sessions**: Track your practice history, duration, and specific mistakes. Sessions persist across browser reloads.
-- **Global Vocabulary Pool**: Practice all words together or focus on specific groups.
-- **Bidirectional Practice**: Questions automatically mix English → Turkish and Turkish → English.
-- **Smart Practice Flow**: Correct answers are fast and fluid. Wrong answers pause for visual correction and reinforcement.
-- **6 App Themes**: Choose the flagship Arctic or Midnight experience, or switch to Developer, Lingo, Battery, or Sunset.
-- **Smart Import**: Easily paste vocabulary lists in a simple text format.
-- **AI Helper**: Built-in prompts for converting screenshots or text into importable vocabulary.
-- **Local-First Privacy**: No backend, no accounts. All data stays in your browser via IndexedDB.
-- **Portable Backups**: Export your entire progress and vocabulary to a single JSON file and manually restore it on any device.
-- **PWA Support**: Installable on iOS/Android home screens for an app-like experience.
+- Import custom vocabulary with a simple, human-readable text format.
+- Keep import batches organized as groups, with rename and merge tools.
+- Practice a single group or the complete **All Words** pool.
+- Alternate between English → Turkish and Turkish → English questions.
+- Answer four-choice questions with immediate correction and later reinforcement.
+- Get balanced coverage through a shuffle-bag question queue.
+- Resume unfinished study sessions after navigation or reloads.
+- Review session history, mistakes, and per-word statistics.
+- Choose from six themes, led by Arctic and Midnight.
+- Store vocabulary and progress locally in IndexedDB.
+- Export and restore a full local JSON backup.
+- Install Lexuni as a Progressive Web App (PWA).
+
+## Import Format
+
+```text
+# Google Cloud
+
+deploy = yayına almak
+reliable = güvenilir
+credential = kimlik bilgisi
+```
+
+A line beginning with `#` names the import group. Each vocabulary entry uses `english = Turkish`; `:` and `-` are also accepted as separators.
+
+## Local-first Privacy
+
+Lexuni stores vocabulary, groups, sessions, and history in IndexedDB on your device. No account or backend is required for core use, and vocabulary is not automatically uploaded to a server. Backup and export actions are initiated and controlled by you.
+
+Because browser storage can be cleared, export a full backup periodically if your vocabulary matters to you.
 
 ## Tech Stack
 
-- React
+- React 19
 - TypeScript
 - Vite
 - Tailwind CSS
-- Dexie.js (IndexedDB)
-- PWA Support (`vite-plugin-pwa`)
+- Dexie / IndexedDB
+- `vite-plugin-pwa`
 
 ## Getting Started
 
-Lexuni runs entirely in the browser. You don't need a database or backend server.
+Node.js 22.12 or newer is required. Node 24 is used for development and CI.
 
-1. Clone the repository:
-   ```bash
-   git clone <repo-url>
-   cd lexuni
-   ```
-
-2. Install dependencies:
-   ```bash
-   npm install
-   ```
-
-3. Start the development server:
-   ```bash
-   npm run dev
-   ```
-
-## Import Format Example
-
-You can easily import lists of words using this format:
-
-```text
-# Development Terms
-
-scalable = ölçeklenebilir
-retrieve = geri almak
-reluctant = isteksiz
+```bash
+git clone https://github.com/bektasing/lexuni.git
+cd lexuni
+npm ci
+npm run dev
 ```
 
-## Project Status
+Open the local URL printed by Vite.
 
-This is a completed v1 of the application focusing on core features and simplicity.
+## Quality Checks
 
-*Privacy Note: Since Lexuni is a local-first application, all of your vocabulary data is stored only in your local browser storage. Clearing your browser data will wipe your vocabulary unless you export it first.*
+```bash
+npm run lint
+npm run build
+```
+
+To preview the production build locally:
+
+```bash
+npm run preview
+```
+
+## Project Structure
+
+- `src/components/` — shared navigation, modal, and confirmation UI
+- `src/pages/` — application screens and practice flow
+- `src/db/` — Dexie database definition and migrations
+- `src/lib/` — theme and practice-feedback helpers
+- `src/types/` — persisted data types
+- `public/` — PWA assets
+
+## Contributing
+
+Contributions are welcome. See [CONTRIBUTING.md](CONTRIBUTING.md) for the development workflow and data-safety expectations.
+
+## Developer
+
+Created by [Hamza Bektaş](https://hamzabektas.xyz).
+
+## License
+
+Lexuni is available under the [MIT License](LICENSE).

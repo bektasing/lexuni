@@ -1,0 +1,31 @@
+name: Feature request
+description: Suggest a focused improvement to Lexuni
+title: "[Feature]: "
+body:
+  - type: markdown
+    attributes:
+      value: Thanks for suggesting an improvement that keeps Lexuni focused, fast, and local-first.
+  - type: textarea
+    id: problem
+    attributes:
+      label: Problem or use case
+      description: What vocabulary-learning need is not met today?
+    validations:
+      required: true
+  - type: textarea
+    id: proposal
+    attributes:
+      label: Proposed improvement
+      description: Describe the behavior you would like to see.
+    validations:
+      required: true
+  - type: textarea
+    id: alternatives
+    attributes:
+      label: Alternatives considered
+      description: What workarounds or alternative designs have you considered?
+  - type: textarea
+    id: context
+    attributes:
+      label: Additional context
+      description: Add mockups or redacted examples if they clarify the request. Do not attach private vocabulary or backups.
